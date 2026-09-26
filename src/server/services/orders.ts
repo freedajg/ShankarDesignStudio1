@@ -144,11 +144,12 @@ export async function placeOrder(db: Db, input: { cartTokenHash: string | null; 
       .returning();
     await tx.insert(t.orderStatusHistory).values({ orderId: o.id, fromStatus: null, toStatus: "NEW", changedBy: null, note: "Order placed" });
 
-    for (const line of lines) {
+    for (const [position, line] of lines.entries()) {
       const [item] = await tx
         .insert(t.orderItems)
         .values({
           orderId: o.id,
+          position,
           productId: line.product.id,
           productName: line.product.name,
           productSlug: line.product.slug,
@@ -311,7 +312,7 @@ export async function orderForCustomer(db: DbOrTx, orderNumber: string, token: s
 export async function orderDetail(db: DbOrTx, orderId: string) {
   const [order] = await db.select().from(t.orders).where(eq(t.orders.id, orderId)).limit(1);
   if (!order) throw notFound("That order");
-  const items = await db.select().from(t.orderItems).where(eq(t.orderItems.orderId, order.id)).orderBy(asc(t.orderItems.id));
+  const items = await db.select().from(t.orderItems).where(eq(t.orderItems.orderId, order.id)).orderBy(asc(t.orderItems.position), asc(t.orderItems.id));
   const sizes = items.length ? await db.select().from(t.orderItemSizes).where(inArray(t.orderItemSizes.orderItemId, items.map((i) => i.id))).orderBy(asc(t.orderItemSizes.sort)) : [];
   const payments = await db.select().from(t.payments).where(eq(t.payments.orderId, order.id)).orderBy(desc(t.payments.createdAt));
   const history = await db

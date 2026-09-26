@@ -91,6 +91,7 @@ export async function listOrders(db: DbOrTx, query: OrderListQuery) {
         .select({ orderId: t.orderItems.orderId, productName: t.orderItems.productName, colourName: t.orderItems.colourName })
         .from(t.orderItems)
         .where(inArray(t.orderItems.orderId, rows.map((r) => r.id)))
+        .orderBy(asc(t.orderItems.position))
     : [];
   return {
     total: n,

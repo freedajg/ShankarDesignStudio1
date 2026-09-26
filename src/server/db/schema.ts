@@ -538,6 +538,8 @@ export const orderItems = pgTable(
     orderId: uuid("order_id")
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),
+    /** line number within the order (cart order) — drives "-1", "-2" in production file names */
+    position: integer("position").notNull().default(0),
     productId: uuid("product_id")
       .notNull()
       .references(() => products.id),
