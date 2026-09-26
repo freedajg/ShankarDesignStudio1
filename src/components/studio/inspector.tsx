@@ -14,6 +14,10 @@ import {
   Copy,
   Italic,
   RotateCcw,
+  RotateCcwSquare,
+  RotateCwSquare,
+  ZoomIn,
+  ZoomOut,
   SendToBack,
   Trash2,
 } from "lucide-react";
@@ -132,6 +136,8 @@ function CommonControls({ el }: { el: DesignElement }) {
   const side = useStudio((s) => s.side);
   const area = areaFor(product, side, surface.printAreaCode);
   const rid = useId();
+  // steps of 15°, wrapped into -180…180
+  const rotate = (deg: number) => update(el.id, { rotation: ((((el.rotation + deg + 180) % 360) + 360) % 360) - 180 }, { coalesce: `${el.id}:rot` });
   const nudge = (dx: number, dy: number) => update(el.id, { x: round2(el.x + dx), y: round2(el.y + dy) }, { coalesce: `${el.id}:nudge` });
 
   return (
@@ -141,8 +147,16 @@ function CommonControls({ el }: { el: DesignElement }) {
           <div className="flex-1">
             <RangeWithValue id={rid} label="Rotation" value={el.rotation} min={-180} max={180} step={1} format={(n) => `${Math.round(n)}°`} onChange={(n) => update(el.id, { rotation: n }, { coalesce: `${el.id}:rot` })} />
           </div>
-          <Button variant="ghost" size="icon-sm" aria-label="Reset rotation" onClick={() => update(el.id, { rotation: 0 })}>
+          <Button variant="ghost" size="icon-sm" aria-label="Reset rotation" title="Reset rotation" onClick={() => update(el.id, { rotation: 0 })}>
             <RotateCcw aria-hidden />
+          </Button>
+        </div>
+        <div className="mt-1 flex gap-1.5">
+          <Button variant="secondary" size="sm" className="flex-1" onClick={() => rotate(-15)}>
+            <RotateCcwSquare aria-hidden /> Rotate left
+          </Button>
+          <Button variant="secondary" size="sm" className="flex-1" onClick={() => rotate(15)}>
+            <RotateCwSquare aria-hidden /> Rotate right
           </Button>
         </div>
       </Row>
@@ -278,6 +292,11 @@ function ImageInspector({ el }: { el: ImageElement }) {
   const sizeId = useId();
   const warnings = asset ? artworkWarnings(asset, el.width, rules) : [];
   const aspect = el.height / el.width;
+  const maxWidth = Math.floor(Math.min(area.widthMm, area.heightMm / aspect));
+  const resize = (k: number) => {
+    const width = round2(Math.min(maxWidth, Math.max(5, el.width * k)));
+    update(el.id, { width, height: round2(width * aspect) }, { coalesce: `${el.id}:size` });
+  };
 
   return (
     <div className="flex flex-col gap-5" data-testid="image-inspector">
@@ -306,11 +325,19 @@ function ImageInspector({ el }: { el: ImageElement }) {
           label="Image width"
           value={el.width}
           min={5}
-          max={Math.floor(Math.min(area.widthMm, area.heightMm / aspect))}
+          max={maxWidth}
           step={1}
           format={(n) => `${(n / 10).toFixed(1)} cm`}
           onChange={(n) => update(el.id, { width: n, height: round2(n * aspect) }, { coalesce: `${el.id}:size` })}
         />
+        <div className="mt-1 flex gap-1.5">
+          <Button variant="secondary" size="sm" className="flex-1" aria-label="Make image smaller" disabled={el.width <= 5} onClick={() => resize(0.9)}>
+            <ZoomOut aria-hidden /> Smaller
+          </Button>
+          <Button variant="secondary" size="sm" className="flex-1" aria-label="Make image bigger" disabled={el.width >= maxWidth} onClick={() => resize(1.1)}>
+            <ZoomIn aria-hidden /> Bigger
+          </Button>
+        </div>
       </Row>
       <CommonControls el={el} />
     </div>

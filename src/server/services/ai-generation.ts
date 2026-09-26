@@ -91,7 +91,54 @@ export async function aiStatus(db: Db, ownerTokenHash: string | null) {
   const e = env();
   const enabled = imageProviders().length > 0 && e.AI_MAX_GENERATIONS_PER_SESSION > 0;
   const used = ownerTokenHash ? await usedGenerations(db, ownerTokenHash) : 0;
-  return { enabled, limit: e.AI_MAX_GENERATIONS_PER_SESSION, used, remaining: Math.max(0, e.AI_MAX_GENERATIONS_PER_SESSION - used), variations: e.AI_VARIATIONS };
+  return {
+    enabled,
+    limit: e.AI_MAX_GENERATIONS_PER_SESSION,
+    used,
+    remaining: Math.max(0, e.AI_MAX_GENERATIONS_PER_SESSION - used),
+    variations: e.AI_VARIATIONS,
+    // demo sites are shown to the shop owner: say how to switch AI on
+    setupHint: !enabled && e.DEMO_MODE,
+  };
+}
+
+/** For staff: is AI switched on, and how have recent generations gone? */
+export async function aiStaffStatus(db: Db) {
+  const e = env();
+  const providers = imageProviders().map((p) => ({ name: p.name, model: p.model }));
+  const since = new Date(Date.now() - 7 * 24 * 3600_000);
+  const counts = await db
+    .select({ status: t.aiGenerations.status, n: sql<number>`count(*)::int` })
+    .from(t.aiGenerations)
+    .where(gte(t.aiGenerations.createdAt, since))
+    .groupBy(t.aiGenerations.status);
+  const [lastFailure] = await db
+    .select({ at: t.aiGenerations.createdAt, errorCode: t.aiGenerations.errorCode })
+    .from(t.aiGenerations)
+    .where(eq(t.aiGenerations.status, "FAILED"))
+    .orderBy(desc(t.aiGenerations.createdAt))
+    .limit(1);
+  const [lastSuccess] = await db
+    .select({ at: t.aiGenerations.createdAt, provider: t.aiGenerations.provider, model: t.aiGenerations.model })
+    .from(t.aiGenerations)
+    .where(eq(t.aiGenerations.status, "SUCCEEDED"))
+    .orderBy(desc(t.aiGenerations.createdAt))
+    .limit(1);
+  return {
+    enabled: providers.length > 0 && e.AI_MAX_GENERATIONS_PER_SESSION > 0,
+    providers,
+    limit: e.AI_MAX_GENERATIONS_PER_SESSION,
+    week: Object.fromEntries(counts.map((c) => [c.status, c.n])) as Partial<Record<string, number>>,
+    lastFailure: lastFailure ?? null,
+    lastSuccess: lastSuccess ?? null,
+  };
+}
+
+/** Staff-facing failure reason (stored in ai_generations.error_code; never shown to customers). */
+function staffReason(err: ProviderError | null) {
+  if (!err) return "UNAVAILABLE";
+  const detail = err.detail.replace(/sk-[A-Za-z0-9_-]{6,}/g, "sk-…").slice(0, 240);
+  return `${err.kind}: ${detail}`;
 }
 
 async function usedGenerations(db: Db, ownerTokenHash: string) {
@@ -257,14 +304,14 @@ export async function runGeneration(
   if (!images || !used) {
     const kind = lastError?.kind ?? "UNAVAILABLE";
     if (kind === "REFUSED") {
-      await finish({ status: "REFUSED", errorCode: kind, provider: providers[0]?.name, model: providers[0]?.model });
+      await finish({ status: "REFUSED", errorCode: staffReason(lastError), provider: providers[0]?.name, model: providers[0]?.model });
       throw new GenerationFailed("REFUSED", AI_MESSAGES.refused);
     }
     if (kind === "CANCELLED" && opts.signal.aborted) {
       await finish({ status: "CANCELLED", errorCode: kind });
       throw new GenerationFailed("CANCELLED", AI_MESSAGES.cancelled);
     }
-    await finish({ status: "FAILED", errorCode: kind });
+    await finish({ status: "FAILED", errorCode: staffReason(lastError), provider: providers[providers.length - 1]?.name, model: providers[providers.length - 1]?.model });
     throw new GenerationFailed("FAILED", AI_MESSAGES.failed);
   }
 

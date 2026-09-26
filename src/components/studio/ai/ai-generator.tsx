@@ -136,6 +136,11 @@ export function AiGenerator({ ai, open, onOpenChange }: { ai: AiGeneratorApi; op
             ) : !ai.status.enabled ? (
               <Alert tone="info" title="AI design generation isn't available right now">
                 You can still upload your own artwork or add text to your shirt.
+                {ai.status.setupHint && (
+                  <span className="mt-2 block text-xs" data-testid="ai-setup-hint">
+                    Shop owner: add <code className="rounded bg-surface px-1">OPENAI_API_KEY</code> in Vercel → Settings → Environment Variables, then redeploy.
+                  </span>
+                )}
               </Alert>
             ) : running ? (
               <Progress stage={ai.phase.kind === "running" ? ai.phase.stage : "interpreting"} onCancel={ai.cancel} />

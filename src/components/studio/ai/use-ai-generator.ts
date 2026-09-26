@@ -21,7 +21,7 @@ export type AiGeneration = {
   createdAt: string;
   images: AiImage[];
 };
-export type AiStatus = { enabled: boolean; limit: number; used: number; remaining: number; variations: number };
+export type AiStatus = { enabled: boolean; limit: number; used: number; remaining: number; variations: number; setupHint?: boolean };
 export type AiStage = "interpreting" | "generating" | "processing";
 
 export type AiRequest = {

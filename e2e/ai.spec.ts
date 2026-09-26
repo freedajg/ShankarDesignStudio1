@@ -111,3 +111,29 @@ test("AI: cancel keeps the design, safety refusals are explained", async ({ page
   await dialog.getByRole("button", { name: "Close" }).click();
   await expect(layers(page)).toHaveCount(1);
 });
+
+test("AI: type 'bear', place it, make it bigger/smaller and rotate it", async ({ page }) => {
+  await openStudio(page, "/studio/classic-crew-tshirt");
+  await page.getByTestId("design-start").getByTestId("ai-open").click();
+  const dialog = page.getByTestId("ai-dialog");
+  await dialog.getByLabel("What do you want to create?").fill("bear");
+  await dialog.getByTestId("ai-generate").click();
+  await dialog.getByTestId("ai-variation").first().getByRole("button", { name: "Use this design" }).click();
+
+  const inspector = page.getByTestId("image-inspector");
+  await expect(inspector).toBeVisible();
+  const width = async () => Number((await page.getByLabel("Image width").inputValue()) || 0);
+  const start = await width();
+  await inspector.getByRole("button", { name: "Make image bigger" }).click();
+  await expect.poll(width).toBeGreaterThan(start);
+  const bigger = await width();
+  await inspector.getByRole("button", { name: "Make image smaller" }).click();
+  await inspector.getByRole("button", { name: "Make image smaller" }).click();
+  await expect.poll(width).toBeLessThan(bigger);
+  await inspector.getByRole("button", { name: "Rotate right" }).click();
+  await expect(inspector.getByText("15°")).toBeVisible();
+  await inspector.getByRole("button", { name: "Rotate left" }).click();
+  await inspector.getByRole("button", { name: "Rotate left" }).click();
+  await expect(inspector.getByText("-15°")).toBeVisible();
+  await expect(layers(page)).toHaveCount(1);
+});

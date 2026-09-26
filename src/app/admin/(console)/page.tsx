@@ -1,19 +1,21 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { Card } from "@/components/ui/feedback";
+import { Badge, Card } from "@/components/ui/feedback";
 import { formatInr } from "@/domain/money";
 import { requirePermissionPage } from "@/server/auth/session";
 import { requestDb } from "@/server/db/request-db";
 import { dashboardStats, listOrders, recentAttention } from "@/server/services/admin";
+import { aiStaffStatus } from "@/server/services/ai-generation";
 
 export default async function AdminDashboard() {
   const user = await requirePermissionPage("orders:read");
   const db = await requestDb();
-  const [s, attention, recent] = await Promise.all([
+  const [s, attention, recent, ai] = await Promise.all([
     dashboardStats(db),
     recentAttention(db),
     listOrders(db, { sort: "created", dir: "desc", page: 1 }),
+    aiStaffStatus(db),
   ]);
 
   const tiles: { label: string; value: string | number; href: string; highlight?: boolean }[] = [
@@ -85,6 +87,32 @@ export default async function AdminDashboard() {
           </ul>
         </section>
       )}
+
+      <section aria-labelledby="ai-status" data-testid="ai-status">
+        <Card className="flex flex-col gap-2 p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Sparkles className="size-4 text-accent" aria-hidden />
+            <h2 id="ai-status" className="font-semibold">AI design generation</h2>
+            {ai.enabled ? <Badge tone="success">On</Badge> : <Badge tone="neutral">Off</Badge>}
+          </div>
+          {ai.enabled ? (
+            <p className="text-sm text-ink-muted">
+              Using {ai.providers.map((p) => `${p.name === "openai" ? "OpenAI" : p.name === "gemini" ? "Google Gemini" : p.name} (${p.model})`).join(", then ")} · {ai.limit} designs per customer per day · last 7 days:{" "}
+              {ai.week.SUCCEEDED ?? 0} succeeded, {ai.week.FAILED ?? 0} failed, {ai.week.REFUSED ?? 0} refused.
+            </p>
+          ) : (
+            <p className="text-sm text-ink-muted">
+              Customers see the button but can&apos;t generate yet. To switch it on, add <code className="rounded bg-surface-muted px-1">OPENAI_API_KEY</code> (or{" "}
+              <code className="rounded bg-surface-muted px-1">GEMINI_API_KEY</code>) in Vercel → Settings → Environment Variables for this environment, then redeploy.
+            </p>
+          )}
+          {ai.lastFailure && (!ai.lastSuccess || ai.lastFailure.at > ai.lastSuccess.at) && (
+            <p className="text-sm text-warning-ink">
+              Last attempt failed ({ai.lastFailure.at.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}): {ai.lastFailure.errorCode}
+            </p>
+          )}
+        </Card>
+      </section>
 
       <section aria-labelledby="recent">
         <div className="mb-3 flex items-center justify-between">

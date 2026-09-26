@@ -209,6 +209,32 @@ describe("provider adapters", () => {
     expect(err.kind).toBe("REFUSED");
   });
 
+  it("OpenAI: falls back to an older image model when the key can't use the newest one", async () => {
+    const b64 = (await png()).toString("base64");
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(init.body as string);
+      if (body.model === "gpt-image-2.5-flare") return new Response(JSON.stringify({ error: { message: "Your organization must be verified to use the model", code: null } }), { status: 403 });
+      return new Response(JSON.stringify({ data: [{ b64_json: b64 }] }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const provider = new OpenAIImageProvider("k", "gpt-image-2.5-flare", "medium");
+    const out = await provider.generateArtwork(baseInput());
+    expect(out).toHaveLength(1);
+    expect(provider.model).toBe("gpt-image-1.5");
+    const second = JSON.parse((fetchMock.mock.calls[1] as unknown as [string, RequestInit])[1].body as string);
+    expect(second.size).toBe("1024x1536"); // older models only take standard sizes
+  });
+
+  it("OpenAI: explains a wrong key or an account without credit", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: { message: "Incorrect API key provided" } }), { status: 401 })));
+    const bad = await new OpenAIImageProvider("k", "m", "medium").generateArtwork(baseInput()).catch((e) => e);
+    expect(bad).toMatchObject({ kind: "CONFIG" });
+    expect(bad.detail).toMatch(/OPENAI_API_KEY/);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: { code: "insufficient_quota", message: "You exceeded your current quota" } }), { status: 429 })));
+    const broke = await new OpenAIImageProvider("k", "m", "medium").generateArtwork(baseInput()).catch((e) => e);
+    expect(broke.detail).toMatch(/no available credit/);
+  });
+
   it("Gemini: parses inline images and maps blocked prompts to refusals", async () => {
     const b64 = (await png()).toString("base64");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ inlineData: { mimeType: "image/png", data: b64 } }] } }] }))));
