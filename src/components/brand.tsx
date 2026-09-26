@@ -16,7 +16,7 @@ export function Logo({ className, href = "/" }: { className?: string; href?: str
         />
         <circle cx="22.6" cy="9.4" r="1.9" fill="white" />
       </svg>
-      <span className="flex flex-col leading-none">
+      <span className="flex flex-col gap-1 leading-none">
         <span className="text-[0.95rem] font-semibold tracking-tight">Sweet Ginger</span>
         <span className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-ink-muted">Design Studio</span>
       </span>

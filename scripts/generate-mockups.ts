@@ -153,12 +153,18 @@ async function generate(spec: GarmentSpec, side: Side) {
       ctx.stroke(inner);
     }
 
-    // fabric grain: subtle seeded noise inside the garment
+    // fabric grain: subtle seeded noise, inside the garment only (outside must stay pure white)
+    const inside = canvas();
+    inside.ctx.fillStyle = "#fff";
+    inside.ctx.fill(outline);
+    if (inner) inside.ctx.fill(inner);
+    const insideAlpha = inside.ctx.getImageData(0, 0, MOCKUP_W, MOCKUP_H).data;
     const img = ctx.getImageData(0, 0, MOCKUP_W, MOCKUP_H);
     const rnd = mulberry32(spec.style.length * 1000 + (side === "front" ? 1 : 2));
     for (let y = 0; y < MOCKUP_H; y++) {
       for (let x = 0; x < MOCKUP_W; x++) {
         const i = (y * MOCKUP_W + x) * 4;
+        if (insideAlpha[i + 3] < 128) continue;
         const weave = (x + y) % 3 === 0 ? 4 : 0; // faint twill
         const n = Math.floor(rnd() * 7) + weave;
         img.data[i] = Math.max(0, img.data[i] - n);

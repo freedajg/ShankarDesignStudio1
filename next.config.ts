@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
   turbopack: { root: path.resolve(".") },
   outputFileTracingRoot: path.resolve("."),
   poweredByHeader: false,
+  devIndicators: false,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
