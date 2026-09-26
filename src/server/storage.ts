@@ -4,8 +4,9 @@ import path from "node:path";
 import { env } from "./env";
 
 /**
- * Object storage behind one interface. Binary files never go in Postgres; rows
- * store (bucket, key). Every bucket is private — the browser only reaches files
+ * Object storage behind one interface. Rows store (bucket, key); the bytes live
+ * on local disk (dev), in Supabase Storage, or — for small shared deployments
+ * without object storage — in the database itself (STORAGE_DRIVER=database). Every bucket is private — the browser only reaches files
  * through route handlers that check ownership or staff permissions.
  */
 export const BUCKETS = {
@@ -85,6 +86,39 @@ export class SupabaseStorage implements StorageDriver {
   }
 }
 
+/** Files stored in the shared Postgres database (table storage_objects). */
+export class DatabaseStorage implements StorageDriver {
+  private async db() {
+    const { getRawDb } = await import("./db/client");
+    return getRawDb();
+  }
+  async put(bucket: Bucket, key: string, data: Buffer, contentType: string) {
+    assertKey(key);
+    const { storageObjects } = await import("./db/schema");
+    await (await this.db())
+      .insert(storageObjects)
+      .values({ bucket, key, contentType, data })
+      .onConflictDoUpdate({ target: [storageObjects.bucket, storageObjects.key], set: { data, contentType } });
+  }
+  async get(bucket: Bucket, key: string) {
+    assertKey(key);
+    const { storageObjects } = await import("./db/schema");
+    const { and, eq } = await import("drizzle-orm");
+    const [row] = await (await this.db())
+      .select({ data: storageObjects.data })
+      .from(storageObjects)
+      .where(and(eq(storageObjects.bucket, bucket), eq(storageObjects.key, key)))
+      .limit(1);
+    return row ? Buffer.from(row.data) : null;
+  }
+  async delete(bucket: Bucket, key: string) {
+    assertKey(key);
+    const { storageObjects } = await import("./db/schema");
+    const { and, eq } = await import("drizzle-orm");
+    await (await this.db()).delete(storageObjects).where(and(eq(storageObjects.bucket, bucket), eq(storageObjects.key, key)));
+  }
+}
+
 let driver: StorageDriver | undefined;
 export function storage(): StorageDriver {
   if (driver) return driver;
@@ -92,7 +126,9 @@ export function storage(): StorageDriver {
   driver =
     e.STORAGE_DRIVER === "supabase"
       ? new SupabaseStorage(e.SUPABASE_URL!, e.SUPABASE_SERVICE_ROLE_KEY!)
-      : new LocalDiskStorage(path.resolve(e.LOCAL_STORAGE_DIR));
+      : e.STORAGE_DRIVER === "database"
+        ? new DatabaseStorage()
+        : new LocalDiskStorage(path.resolve(e.LOCAL_STORAGE_DIR));
   return driver;
 }
 

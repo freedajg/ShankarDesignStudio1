@@ -38,6 +38,21 @@ Good for showing the product; **not for real orders** — demo data lives on the
 resets whenever Vercel restarts the server (e.g. after inactivity or a redeploy), and a design being edited
 at that moment is kept only in the visitor's browser.
 
+### Option A+ — reliable demo with a free shared database (recommended, ~2 minutes)
+
+Vercel runs the site on several servers at once and restarts them when idle. With Option A each server has
+its **own** temporary copy of the data, so an image made on one server can be missing on the next request
+(broken AI previews, lost uploads). Give them one shared database instead:
+
+1. Vercel → your project → **Storage** → **Create Database** → **Neon** (Serverless Postgres, free plan) →
+   **Connect** it to this project with all environments ticked. This adds `DATABASE_URL` for you.
+2. Settings → Environment Variables → add **`DEMO_MODE`** = `true` (Production and Preview).
+3. Deployments → ⋯ → **Redeploy**.
+
+On first start the site creates its tables and the demo data by itself, and stores images in the database
+(`STORAGE_DRIVER=database`, the default on Vercel with a database). Everything stays demo-labelled with
+simulated payments, but now survives restarts and works across servers.
+
 ### Turning on AI design generation
 
 In Vercel → Project → Settings → Environment Variables, add **one** of these (more than one gives a fallback),

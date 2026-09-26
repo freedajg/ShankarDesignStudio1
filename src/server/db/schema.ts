@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  customType,
   index,
   integer,
   jsonb,
@@ -725,6 +726,28 @@ export const auditLogs = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
   },
   (t) => [index("audit_logs_entity_idx").on(t.entityType, t.entityId), index("audit_logs_created_idx").on(t.createdAt)],
+);
+
+const bytea = customType<{ data: Buffer; driverData: Buffer | Uint8Array }>({
+  dataType: () => "bytea",
+  fromDriver: (v) => (Buffer.isBuffer(v) ? v : Buffer.from(v)),
+});
+
+/**
+ * File storage inside Postgres (STORAGE_DRIVER=database). For deployments with
+ * a shared database but no object storage, e.g. a Vercel demo with a Neon
+ * database: every server instance sees the same files.
+ */
+export const storageObjects = pgTable(
+  "storage_objects",
+  {
+    bucket: text("bucket").notNull(),
+    key: text("key").notNull(),
+    contentType: text("content_type").notNull(),
+    data: bytea("data").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.bucket, t.key] })],
 );
 
 /** Fixed-window counters for rate limiting; shared by all server instances. */

@@ -28,7 +28,11 @@ const schema = z
     // Serverless hosts (Vercel) only allow writing to /tmp.
     PGLITE_DATA_DIR: z.string().default(() => (process.env.VERCEL ? "/tmp/sg-demo/pglite" : ".data/pglite")),
 
-    STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
+    /**
+     * local: files on this server's disk (dev / single server) · supabase · database: inside Postgres.
+     * Default on Vercel with a shared database: database (local disk isn't shared between instances).
+     */
+    STORAGE_DRIVER: z.enum(["local", "supabase", "database"]).default(() => (process.env.VERCEL && sharedDatabaseUrl() ? "database" : "local")),
     LOCAL_STORAGE_DIR: z.string().default(() => (process.env.VERCEL ? "/tmp/sg-demo/storage" : ".data/storage")),
     SUPABASE_URL: z.string().url().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
@@ -92,6 +96,12 @@ const schema = z
   })
   .transform((env) => ({ ...env, DEMO_MODE: isDemo(env) }));
 
+/** DATABASE_URL, or POSTGRES_URL as set by Vercel's Postgres/Neon/Supabase integrations. */
+function sharedDatabaseUrl() {
+  const v = (process.env.DATABASE_URL ?? "").trim() || (process.env.POSTGRES_URL ?? "").trim();
+  return v || undefined;
+}
+
 function isDemo(env: { DEMO_MODE: boolean; NODE_ENV: string; DATABASE_URL?: string }) {
   return env.DEMO_MODE || (env.NODE_ENV === "production" && !env.DATABASE_URL);
 }
@@ -104,7 +114,8 @@ export function env(): Env {
   if (cached) return cached;
   // Hosting dashboards make it easy to save a variable with an empty value;
   // treat blank values as "not set" so defaults apply instead of failing validation.
-  const raw = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined && v.trim() !== ""));
+  const raw: Record<string, string | undefined> = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined && v.trim() !== ""));
+  if (!raw.DATABASE_URL && raw.POSTGRES_URL) raw.DATABASE_URL = raw.POSTGRES_URL;
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  - ${i.path.join(".") || "(env)"}: ${i.message}`);

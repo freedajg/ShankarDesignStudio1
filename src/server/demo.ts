@@ -164,6 +164,17 @@ async function demoOrder(db: Db, spec: DemoOrder, logoId: string, admin: { id: s
 export async function ensureDemoData(db: Db) {
   const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(t.products);
   if (n > 0) return;
+  // several instances may start at once on a shared database: only one fills it
+  const claimed = await db.insert(t.rateLimits).values({ key: "demo:seed", windowStart: new Date(), count: 1 }).onConflictDoNothing().returning();
+  if (!claimed.length) {
+    // another instance is filling it: wait (briefly) for the catalogue to appear
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 1000));
+      const [{ n: now }] = await db.select({ n: sql<number>`count(*)::int` }).from(t.products);
+      if (now > 0) return;
+    }
+    return;
+  }
   console.info("[demo] empty database — loading sample catalogue, staff and orders");
   await seedDemoData(db);
   let adminId = "";

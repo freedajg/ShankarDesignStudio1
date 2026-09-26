@@ -127,3 +127,26 @@ describe("demo seed", () => {
     expect(pa!.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
   });
 });
+
+describe("database file storage", () => {
+  it("stores, overwrites, reads and deletes files inside Postgres", async () => {
+    const { createTestDb } = await import("../support/db");
+    const { setDbForTests } = await import("@/server/db/client");
+    const { DatabaseStorage, BUCKETS } = await import("@/server/storage");
+    setDbForTests(await createTestDb({ seed: false }));
+    try {
+      const s = new DatabaseStorage();
+      const data = Buffer.from([0, 1, 2, 250, 255]);
+      await s.put(BUCKETS.processed, "a/b.png", data, "image/png");
+      expect(Buffer.compare((await s.get(BUCKETS.processed, "a/b.png"))!, data)).toBe(0);
+      await s.put(BUCKETS.processed, "a/b.png", Buffer.from("new"), "image/png");
+      expect((await s.get(BUCKETS.processed, "a/b.png"))!.toString()).toBe("new");
+      expect(await s.get(BUCKETS.originals, "a/b.png")).toBeNull();
+      await s.delete(BUCKETS.processed, "a/b.png");
+      expect(await s.get(BUCKETS.processed, "a/b.png")).toBeNull();
+      await expect(s.put(BUCKETS.processed, "../x", data, "image/png")).rejects.toThrow(/unsafe/);
+    } finally {
+      setDbForTests(undefined);
+    }
+  });
+});
