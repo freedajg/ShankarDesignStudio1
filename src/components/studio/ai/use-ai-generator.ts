@@ -36,7 +36,7 @@ export type AiRequest = {
 
 type Phase =
   | { kind: "idle" }
-  | { kind: "running"; stage: AiStage; request: AiRequest }
+  | { kind: "running"; stage: AiStage; request: AiRequest; generationId?: string; expected?: number }
   | { kind: "error"; message: string; refused: boolean; request: AiRequest };
 
 const GENERIC_ERROR = "Something went wrong while creating your artwork. Your design is safe. Please try again.";
@@ -115,9 +115,15 @@ export function useAiGenerator() {
             if (!line) continue;
             const event = JSON.parse(line) as
               | { type: "stage"; stage: AiStage }
+              | { type: "image"; generation: AiGeneration; expected: number }
               | { type: "done"; generation: AiGeneration; status: AiStatus }
               | { type: "error"; reason: string; message: string };
-            if (event.type === "stage") setPhase({ kind: "running", stage: event.stage, request });
+            if (event.type === "stage") setPhase((p) => (p.kind === "running" && p.generationId ? p : { kind: "running", stage: event.stage, request }));
+            else if (event.type === "image") {
+              // show each option the moment it's ready
+              setCurrent(event.generation);
+              setPhase({ kind: "running", stage: "processing", request, generationId: event.generation.id, expected: event.expected });
+            }
             else if (event.type === "done") {
               setCurrent(event.generation);
               setHistory((h) => [event.generation, ...h.filter((g) => g.id !== event.generation.id)].slice(0, 12));

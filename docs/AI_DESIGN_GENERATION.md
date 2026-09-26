@@ -93,7 +93,7 @@ Progress is streamed from the server as NDJSON stages (`interpreting → generat
 | `AI_FALLBACK_PROVIDER` | `auto` | `auto` (the next configured one) · `openai` · `gemini` · `openrouter` · `none` |
 | `OPENAI_IMAGE_MODEL` / `GEMINI_IMAGE_MODEL` | `gpt-image-2.5-flare` / `gemini-3.1-flash-image` | |
 | `AI_IMAGE_QUALITY` | `medium` | OpenAI quality (cost vs detail) |
-| `AI_VARIATIONS` | `3` | options per generation (1–4) |
+| `AI_VARIATIONS` | `2` | options per generation (1–4); generated in parallel, each shown as soon as it is stored |
 | `AI_MAX_GENERATIONS_PER_SESSION` | `10` | per browser per 24 h; `0` disables AI |
 | `AI_TIMEOUT_MS` | `170000` | provider timeout |
 

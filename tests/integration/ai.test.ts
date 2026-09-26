@@ -99,12 +99,33 @@ describe("AI generation service", () => {
     await expect(markSelected(db, bob, gen.images[0].id, null)).rejects.toBeInstanceOf(AppError);
   });
 
+  it("delivers each option as soon as it is stored", async () => {
+    class Staggered implements ImageGenerationProvider {
+      readonly name = "staggered";
+      readonly model = "s";
+      readonly supportsTransparency = true;
+      private n = 0;
+      private inner = new FixtureImageProvider();
+      async generateArtwork(input: GenerateArtworkInput) {
+        const delay = this.n++ === 0 ? 20 : 400;
+        await new Promise((r) => setTimeout(r, delay));
+        return this.inner.generateArtwork(input);
+      }
+    }
+    const p = [new Staggered()];
+    const prep = await prepareGeneration(db, { ownerTokenHash: freshOwner(), ip: null, input: input(), providers: p });
+    const seen: number[] = [];
+    const gen = await runGeneration(db, prep, { signal: signal(), providers: p, onImage: (g) => seen.push(g.images.length) });
+    expect(seen).toEqual([1, 2]);
+    expect(gen.images.map((i) => i.asset.id)).toHaveLength(2);
+  });
+
   it("falls back to the next provider when the primary is unavailable", async () => {
     const broken = new FailingProvider("UNAVAILABLE");
     const providers = [broken, new FixtureImageProvider()];
     const prep = await prepareGeneration(db, { ownerTokenHash: freshOwner(), ip: null, input: input(), providers });
     const gen = await runGeneration(db, prep, { signal: signal(), providers });
-    expect(broken.calls).toBe(1);
+    expect(broken.calls).toBe(2); // once per option, each then served by the fallback
     expect(gen.images.length).toBeGreaterThan(0);
   });
 

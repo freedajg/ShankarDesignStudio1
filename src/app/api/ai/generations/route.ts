@@ -20,6 +20,7 @@ export const GET = api(async () => {
  * Generate artwork. Validation, limits and ownership are checked up front
  * (plain JSON errors). Then the response streams NDJSON progress events:
  *   {"type":"stage","stage":"interpreting"|"generating"|"processing"}
+ *   {"type":"image","generation":{…options so far},"expected":n}   (repeated)
  *   {"type":"done","generation":{…},"status":{…}}
  *   {"type":"error","reason":"REFUSED"|"FAILED"|"CANCELLED","message":"…"}
  * Provider names, prompts and internal errors are never included.
@@ -45,7 +46,12 @@ export const POST = api(async (req) => {
       };
       send({ type: "stage", stage: "interpreting" });
       try {
-        const generation = await runGeneration(db, prep, { signal: abort.signal, onStage: (stage) => send({ type: "stage", stage }) });
+        const generation = await runGeneration(db, prep, {
+          signal: abort.signal,
+          onStage: (stage) => send({ type: "stage", stage }),
+          // each option as soon as it's ready
+          onImage: (partial) => send({ type: "image", generation: partial, expected: prep.count }),
+        });
         send({ type: "done", generation, status: await aiStatus(db, owner.tokenHash) });
       } catch (err) {
         if (err instanceof GenerationFailed) send({ type: "error", reason: err.reason, message: err.customerMessage });

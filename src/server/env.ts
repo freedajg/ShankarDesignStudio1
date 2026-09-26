@@ -61,7 +61,7 @@ const schema = z
     OPENROUTER_API_KEY: z.string().optional(),
     OPENROUTER_IMAGE_MODEL: z.string().default("google/gemini-3.1-flash-image-preview"),
     /** variations per generation */
-    AI_VARIATIONS: z.coerce.number().int().min(1).max(4).default(3),
+    AI_VARIATIONS: z.coerce.number().int().min(1).max(4).default(2),
     /** generations allowed per browser session (owner cookie) */
     AI_MAX_GENERATIONS_PER_SESSION: z.coerce.number().int().min(0).max(1000).default(10),
     AI_TIMEOUT_MS: z.coerce.number().int().min(10_000).max(290_000).default(170_000),

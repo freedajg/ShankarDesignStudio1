@@ -259,7 +259,13 @@ export class GenerationFailed extends Error {
 export async function runGeneration(
   db: Db,
   prep: Prepared,
-  opts: { signal: AbortSignal; onStage?: (stage: GenerationStage) => void; providers?: ImageGenerationProvider[] },
+  opts: {
+    signal: AbortSignal;
+    onStage?: (stage: GenerationStage) => void;
+    /** called as each option is stored, so the customer sees it immediately */
+    onImage?: (generation: GenerationDto) => void;
+    providers?: ImageGenerationProvider[];
+  },
 ): Promise<GenerationDto> {
   const started = Date.now();
   const providers = opts.providers ?? imageProviders();
@@ -269,92 +275,104 @@ export async function runGeneration(
       .update(t.aiGenerations)
       .set({ ...values, completedAt: new Date(), durationMs: Date.now() - started })
       .where(eq(t.aiGenerations.id, prep.id));
+  const rules = (await loadSettings(db)).artwork;
+  const placedWidth = prep.context.printAreaWidthMm * 0.7;
+
+  /** one option: the provider chain (primary → fallback); a refusal is never retried elsewhere */
+  const generateOne = async (slot: number): Promise<{ image: GeneratedImage; provider: ImageGenerationProvider }> => {
+    let lastError: ProviderError | null = null;
+    for (const provider of providers) {
+      try {
+        const [image] = await provider.generateArtwork({
+          prompt: slot ? `${prep.prompt}\nOption ${slot + 1}: a distinctly different composition from other options.` : prep.prompt,
+          negativePrompt: prep.negative,
+          style: prep.requirements.style,
+          aspectRatio: prep.requirements.orientation,
+          size: prep.size,
+          count: 1,
+          referenceImage: prep.reference,
+          productContext: { productName: prep.context.productName, side: prep.context.side },
+          printArea: { name: prep.context.printAreaName, widthMm: prep.context.printAreaWidthMm, heightMm: prep.context.printAreaHeightMm },
+          shirtColour: { name: prep.context.shirtColourName, hex: prep.context.shirtColourHex },
+          printMethod: prep.context.printMethodCode,
+          endUser: prep.ownerTokenHash.slice(0, 32),
+          signal,
+        });
+        if (!image) throw new ProviderError("BAD_RESPONSE", "no image returned");
+        return { image, provider };
+      } catch (err) {
+        lastError = err instanceof ProviderError ? err : new ProviderError("BAD_RESPONSE", err instanceof Error ? err.message : String(err));
+        console.warn(`[ai] ${provider.name}/${provider.model} failed: ${lastError.kind} ${lastError.detail}`);
+        if (lastError.kind === "REFUSED" || lastError.kind === "CANCELLED" || lastError.kind === "TIMEOUT") break;
+      }
+    }
+    throw lastError ?? new ProviderError("UNAVAILABLE", "no provider");
+  };
 
   opts.onStage?.("generating");
-  let images: GeneratedImage[] | null = null;
+  const images: GenerationImageDto[] = [];
   let used: ImageGenerationProvider | null = null;
-  let lastError: ProviderError | null = null;
-  for (const provider of providers) {
-    try {
-      images = await provider.generateArtwork({
-        prompt: prep.prompt,
-        negativePrompt: prep.negative,
-        style: prep.requirements.style,
-        aspectRatio: prep.requirements.orientation,
-        size: prep.size,
-        count: prep.count,
-        referenceImage: prep.reference,
-        productContext: { productName: prep.context.productName, side: prep.context.side },
-        printArea: { name: prep.context.printAreaName, widthMm: prep.context.printAreaWidthMm, heightMm: prep.context.printAreaHeightMm },
-        shirtColour: { name: prep.context.shirtColourName, hex: prep.context.shirtColourHex },
-        printMethod: prep.context.printMethodCode,
-        endUser: prep.ownerTokenHash.slice(0, 32),
-        signal,
-      });
-      used = provider;
-      break;
-    } catch (err) {
-      lastError = err instanceof ProviderError ? err : new ProviderError("BAD_RESPONSE", err instanceof Error ? err.message : String(err));
-      console.warn(`[ai] ${provider.name}/${provider.model} failed: ${lastError.kind} ${lastError.detail}`);
-      // a safety refusal is final: never shop the same request around to another provider
-      if (lastError.kind === "REFUSED" || lastError.kind === "CANCELLED" || lastError.kind === "TIMEOUT") break;
-    }
-  }
-
-  if (!images || !used) {
-    const kind = lastError?.kind ?? "UNAVAILABLE";
-    if (kind === "REFUSED") {
-      await finish({ status: "REFUSED", errorCode: staffReason(lastError), provider: providers[0]?.name, model: providers[0]?.model });
-      throw new GenerationFailed("REFUSED", AI_MESSAGES.refused);
-    }
-    if (kind === "CANCELLED" && opts.signal.aborted) {
-      await finish({ status: "CANCELLED", errorCode: kind });
-      throw new GenerationFailed("CANCELLED", AI_MESSAGES.cancelled);
-    }
-    await finish({ status: "FAILED", errorCode: staffReason(lastError), provider: providers[providers.length - 1]?.name, model: providers[providers.length - 1]?.model });
-    throw new GenerationFailed("FAILED", AI_MESSAGES.failed);
-  }
-
-  opts.onStage?.("processing");
-  try {
-    const rules = (await loadSettings(db)).artwork;
-    const saved: Awaited<ReturnType<typeof processUpload>>[] = [];
-    for (const [i, img] of images.entries()) {
-      const needsBackgroundLift = !img.transparent;
-      const asset = await processUpload(db, {
-        data: /^image\/(png|jpeg)$/.test(img.mime) ? img.data : await toPng(img.data),
-        filename: `ai-design-${i + 1}.png`,
-        ownerTokenHash: prep.ownerTokenHash,
-        rules,
-        source: "AI",
-        transform: needsBackgroundLift ? (png) => removeFlatBackground(png).catch(() => null) : undefined,
-      });
-      saved.push(asset);
-    }
-    const rows = await db
-      .insert(t.aiGenerationImages)
-      .values(saved.map((a, position) => ({ generationId: prep.id, position, assetId: a.id })))
-      .returning();
-    await finish({ status: "SUCCEEDED", provider: used.name, model: used.model });
-
-    const placedWidth = prep.context.printAreaWidthMm * 0.7;
-    return {
-      ...dtoBase(prep),
-      images: rows.map((r, i) => {
-        const a = saved[i];
-        return {
-          id: r.id,
-          asset: { id: a.id, previewUrl: a.previewUrl, widthPx: a.widthPx, heightPx: a.heightPx, hasAlpha: a.hasAlpha, mime: a.mime, originalFilename: a.originalFilename, source: "AI" as const },
-          warnings: artworkWarnings(a, placedWidth, rules),
-          selected: false,
-        };
+  let storageFailed = false;
+  // store sequentially so positions are stable, even though options finish in any order
+  let chain = Promise.resolve();
+  const results = await Promise.allSettled(
+    Array.from({ length: prep.count }, (_, slot) =>
+      generateOne(slot).then(({ image, provider }) => {
+        chain = chain.then(async () => {
+          if (opts.signal.aborted) return;
+          try {
+            const asset = await processUpload(db, {
+              data: /^image\/(png|jpeg)$/.test(image.mime) ? image.data : await toPng(image.data),
+              filename: `ai-design-${images.length + 1}.png`,
+              ownerTokenHash: prep.ownerTokenHash,
+              rules,
+              source: "AI",
+              transform: image.transparent ? undefined : (png) => removeFlatBackground(png).catch(() => null),
+            });
+            const [row] = await db.insert(t.aiGenerationImages).values({ generationId: prep.id, position: images.length, assetId: asset.id }).returning();
+            used ??= provider;
+            images.push({
+              id: row.id,
+              asset: { id: asset.id, previewUrl: asset.previewUrl, widthPx: asset.widthPx, heightPx: asset.heightPx, hasAlpha: asset.hasAlpha, mime: asset.mime, originalFilename: asset.originalFilename, source: "AI" as const },
+              warnings: artworkWarnings(asset, placedWidth, rules),
+              selected: false,
+            });
+            if (images.length === 1) opts.onStage?.("processing");
+            opts.onImage?.({ ...dtoBase(prep), images: [...images] });
+          } catch (err) {
+            console.error("[ai] storing a generated image failed", err);
+            storageFailed = true;
+          }
+        });
+        return chain;
       }),
-    };
-  } catch (err) {
-    console.error("[ai] storing generated images failed", err);
-    await finish({ status: "FAILED", errorCode: "STORAGE", provider: used.name, model: used.model });
-    throw new GenerationFailed("FAILED", AI_MESSAGES.failed);
+    ),
+  );
+  await chain;
+
+  if (images.length && used && !opts.signal.aborted) {
+    const u = used as ImageGenerationProvider;
+    await finish({ status: "SUCCEEDED", provider: u.name, model: u.model });
+    return { ...dtoBase(prep), images };
   }
+
+  const errors = results.flatMap((r) => (r.status === "rejected" ? [r.reason as ProviderError] : []));
+  const lastError = errors.find((e) => e.kind === "REFUSED") ?? errors.find((e) => e.kind === "CONFIG") ?? errors[0] ?? null;
+  if (opts.signal.aborted) {
+    await finish({ status: "CANCELLED", errorCode: "CANCELLED" });
+    throw new GenerationFailed("CANCELLED", AI_MESSAGES.cancelled);
+  }
+  if (lastError?.kind === "REFUSED") {
+    await finish({ status: "REFUSED", errorCode: staffReason(lastError), provider: providers[0]?.name, model: providers[0]?.model });
+    throw new GenerationFailed("REFUSED", AI_MESSAGES.refused);
+  }
+  await finish({
+    status: "FAILED",
+    errorCode: storageFailed && !lastError ? "STORAGE" : staffReason(lastError),
+    provider: providers[providers.length - 1]?.name,
+    model: providers[providers.length - 1]?.model,
+  });
+  throw new GenerationFailed("FAILED", AI_MESSAGES.failed);
 }
 
 function dtoBase(prep: Prepared) {

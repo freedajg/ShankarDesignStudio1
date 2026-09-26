@@ -76,6 +76,9 @@ export function AiGenerator({ ai, open, onOpenChange }: { ai: AiGeneratorApi; op
   }
 
   const running = ai.phase.kind === "running";
+  // options are arriving: show them with placeholders for the rest
+  const partial = ai.phase.kind === "running" && !!ai.phase.generationId && ai.current?.id === ai.phase.generationId;
+  const pending = partial && ai.phase.kind === "running" ? Math.max(0, (ai.phase.expected ?? 0) - (ai.current?.images.length ?? 0)) : 0;
   const noQuota = !!ai.status && ai.status.enabled && ai.status.remaining <= 0;
 
   const request = (over: Partial<AiRequest> = {}): AiRequest => ({ prompt: prompt.trim(), style, orientation, lettering, ...over });
@@ -108,7 +111,7 @@ export function AiGenerator({ ai, open, onOpenChange }: { ai: AiGeneratorApi; op
           className="fixed inset-0 z-50 flex flex-col bg-surface shadow-float data-[state=open]:animate-sheet-up sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[92dvh] sm:w-[min(46rem,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[var(--radius-lg)] sm:border sm:border-line"
         >
           <header className="flex items-start gap-3 border-b border-line px-4 py-3 sm:px-6 sm:py-4">
-            {view === "results" && !running ? (
+            {(view === "results" && !running) || partial ? (
               <button type="button" onClick={() => setView("form")} className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full hover:bg-surface-muted" aria-label="Back to your idea">
                 <ArrowLeft className="size-5" aria-hidden />
               </button>
@@ -142,11 +145,13 @@ export function AiGenerator({ ai, open, onOpenChange }: { ai: AiGeneratorApi; op
                   </span>
                 )}
               </Alert>
-            ) : running ? (
+            ) : running && !partial ? (
               <Progress stage={ai.phase.kind === "running" ? ai.phase.stage : "interpreting"} onCancel={ai.cancel} />
-            ) : view === "results" && ai.current ? (
+            ) : (view === "results" || partial) && ai.current ? (
               <Results
                 gen={ai.current}
+                pending={pending}
+                onCancel={partial ? ai.cancel : undefined}
                 addWords={addWords}
                 setAddWords={setAddWords}
                 onUse={(img) => place(ai.current!, img)}
@@ -409,7 +414,11 @@ function Results({
   onEditPrompt,
   refine,
   disabled,
+  pending = 0,
+  onCancel,
 }: {
+  pending?: number;
+  onCancel?: () => void;
   gen: AiGeneration;
   addWords: boolean;
   setAddWords: (v: boolean) => void;
@@ -445,7 +454,7 @@ function Results({
         </label>
       )}
 
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <ul className="grid grid-cols-2 gap-3">
         {gen.images.map((img, i) => (
           <li key={img.id} className="flex flex-col overflow-hidden rounded-[var(--radius-md)] border border-line bg-surface" data-testid="ai-variation">
             <div className="relative grid aspect-square place-items-center p-3" style={{ backgroundColor: shirtHex }} title={`Preview on ${colourName}`}>
@@ -468,9 +477,27 @@ function Results({
             </div>
           </li>
         ))}
+        {Array.from({ length: pending }, (_, i) => (
+          <li key={`pending-${i}`} className="flex flex-col overflow-hidden rounded-[var(--radius-md)] border border-dashed border-line-strong" data-testid="ai-variation-pending">
+            <div className="grid aspect-square place-items-center bg-surface-muted p-3 text-center">
+              <div className="flex flex-col items-center gap-2 text-sm text-ink-muted">
+                <Loader2 className="size-5 animate-spin text-accent" aria-hidden />
+                Creating option {gen.images.length + i + 1}…
+              </div>
+            </div>
+          </li>
+        ))}
       </ul>
 
-      {refine}
+      {pending > 0 && onCancel && (
+        <div className="flex items-center justify-between gap-3 text-sm text-ink-muted" role="status" aria-live="polite">
+          <span>You can use a design now — the next one is on its way.</span>
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            Stop
+          </Button>
+        </div>
+      )}
+      {pending === 0 && refine}
       <p className="text-xs text-ink-muted">AI-generated artwork. Please check spelling and details before ordering — our team also reviews every design before printing.</p>
     </div>
   );

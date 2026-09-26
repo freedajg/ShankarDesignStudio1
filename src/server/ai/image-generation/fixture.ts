@@ -20,7 +20,8 @@ export class FixtureImageProvider implements ImageGenerationProvider {
   constructor(private readonly delayMs = 0) {}
 
   async generateArtwork(input: GenerateArtworkInput): Promise<GeneratedImage[]> {
-    if (this.delayMs) await wait(this.delayMs, input.signal);
+    // later options arrive later, like a real model finishing at different times
+    if (this.delayMs) await wait(this.delayMs * (/\nOption \d+:/.test(input.prompt) ? 3 : 1), input.signal);
     if (input.signal.aborted) throw new ProviderError("CANCELLED", "aborted");
     if (input.prompt.includes("FIXTURE_REFUSE")) throw new ProviderError("REFUSED", "fixture refusal");
     if (input.prompt.includes("FIXTURE_FAIL")) throw new ProviderError("UNAVAILABLE", "fixture outage");

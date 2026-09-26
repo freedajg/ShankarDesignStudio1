@@ -27,8 +27,10 @@ test("AI: generate a design, place it, edit, order, and staff can produce it", a
   // staged progress, then variations
   await expect(dialog.getByTestId("ai-progress")).toBeVisible();
   await expect(dialog.getByTestId("ai-results")).toBeVisible({ timeout: 60_000 });
+  // the first option shows while the second is still being created
+  await expect(dialog.getByTestId("ai-variation-pending")).toBeVisible();
   const cards = dialog.getByTestId("ai-variation");
-  await expect(cards).toHaveCount(3);
+  await expect(cards).toHaveCount(2);
   await expect(dialog.getByTestId("ai-results")).toContainText("“STAY WILD”");
 
   // insert: the artwork + the requested words as editable text, nothing erased
