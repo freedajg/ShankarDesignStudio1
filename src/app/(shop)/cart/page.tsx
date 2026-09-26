@@ -88,7 +88,7 @@ export default async function CartPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold tabular-nums">{formatInr(l.lineTotalPaise)}</p>
-                      <p className="text-xs text-ink-muted">{l.quantity} pcs</p>
+                      <p className="text-xs text-ink-muted">{l.quantity} {l.quantity === 1 ? "piece" : "pieces"}</p>
                     </div>
                   </div>
                   {l.tier && <Badge tone="success" className="mt-2">{l.tier.discountBps / 100}% volume discount</Badge>}

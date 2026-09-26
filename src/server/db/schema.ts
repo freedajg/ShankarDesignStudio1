@@ -514,6 +514,8 @@ export const orders = pgTable(
     totalQuantity: integer("total_quantity").notNull(),
     pricingSnapshot: jsonb("pricing_snapshot").notNull(),
     accessTokenHash: text("access_token_hash").notNull(),
+    /** client-generated key: a double-submitted checkout returns the same order */
+    idempotencyKey: text("idempotency_key").unique(),
     needsAttention: text("needs_attention"),
     placedAt: timestamp("placed_at", { withTimezone: true }),
     paidAt: timestamp("paid_at", { withTimezone: true }),

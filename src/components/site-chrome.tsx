@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ShoppingBag } from "lucide-react";
 import { Logo } from "./brand";
+import { CartBadge } from "./cart-badge";
 
 export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
   return (
@@ -14,18 +14,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
           <Link href="/bulk" className="hidden rounded-[var(--radius-sm)] px-3 py-2 text-ink-muted hover:text-ink sm:block">
             Bulk &amp; corporate
           </Link>
-          <Link
-            href="/cart"
-            className="relative ml-1 inline-flex size-11 items-center justify-center rounded-full hover:bg-surface-muted"
-            aria-label={cartCount ? `Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}` : "Cart"}
-          >
-            <ShoppingBag className="size-5" aria-hidden />
-            {cartCount > 0 && (
-              <span className="absolute right-1 top-1 grid min-w-5 place-items-center rounded-full bg-ginger px-1 text-[0.7rem] font-semibold text-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+          <CartBadge initial={cartCount} />
         </nav>
       </div>
     </header>
