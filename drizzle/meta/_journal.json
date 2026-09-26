@@ -15,6 +15,13 @@
       "when": 1790436029627,
       "tag": "0001_order_idempotency",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790436819869,
+      "tag": "0002_event_clock",
+      "breakpoints": true
     }
   ]
 }

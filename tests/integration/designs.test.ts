@@ -96,7 +96,35 @@ describe("designs", () => {
   });
 });
 
+/** Width in mm of the non-transparent pixels in a print PNG. */
+async function inkWidthMm(png: Buffer, dpi: number) {
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  let min = info.width, max = -1;
+  for (let y = 0; y < info.height; y++)
+    for (let x = 0; x < info.width; x++)
+      if (data[(y * info.width + x) * 4 + 3] > 128) {
+        if (x < min) min = x;
+        if (x > max) max = x;
+      }
+  return ((max - min + 1) / dpi) * 25.4;
+}
+
 describe("deterministic rendering", () => {
+  it("text keeps the same physical size at every resolution (preview ≈ print) and stays inside its laid-out box", async () => {
+    const { layoutText } = await import("@/domain/render/text");
+    const { serverMeasure } = await import("@/server/render/canvas");
+    const el = textEl({ text: "HELLO JAIPUR", fontSize: 30, fill: "#000000" });
+    const d = doc(crew, { front: [el] });
+    const widths = [];
+    for (const dpi of [40, 150, 300]) widths.push(await inkWidthMm((await renderPrintFile(db, { product: crew, doc: d, side: "front", dpi })).png, dpi));
+    const [low, mid, high] = widths;
+    expect(Math.abs(low - high) / high).toBeLessThan(0.015);
+    expect(Math.abs(mid - high) / high).toBeLessThan(0.015);
+    const layout = layoutText(el, serverMeasure());
+    expect(high).toBeLessThanOrEqual(layout.hw * 2 + 0.5);
+    expect(high).toBeGreaterThan(layout.hw * 2 * 0.85);
+  });
+
   it("renders print files at physical size and identical bytes for the same design", async () => {
     const logo = await uploadLogo(db, alice.tokenHash);
     const d = doc(crew, { front: [textEl({ text: "SAME" }), { id: "img1", type: "image", assetId: logo.id, width: 100, height: 100, x: 140, y: 220, rotation: 0 }] });

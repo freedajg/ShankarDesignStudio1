@@ -618,7 +618,8 @@ export const orderStatusHistory = pgTable(
     /** null = system (checkout / payment) */
     changedBy: uuid("changed_by").references(() => users.id, { onDelete: "set null" }),
     note: text("note"),
-    createdAt: createdAt(),
+    // clock_timestamp (not now()): several changes in one transaction must stay in order
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
   },
   (t) => [index("order_status_history_order_idx").on(t.orderId)],
 );
@@ -660,7 +661,7 @@ export const auditLogs = pgTable(
     entityId: text("entity_id"),
     data: jsonb("data"),
     ip: text("ip"),
-    createdAt: createdAt(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
   },
   (t) => [index("audit_logs_entity_idx").on(t.entityType, t.entityId), index("audit_logs_created_idx").on(t.createdAt)],
 );

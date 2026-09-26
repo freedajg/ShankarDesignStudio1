@@ -1,11 +1,112 @@
+import Link from "next/link";
+import { AlertTriangle, ArrowRight } from "lucide-react";
+import { StatusBadge } from "@/components/admin/status-badge";
+import { Card } from "@/components/ui/feedback";
+import { formatInr } from "@/domain/money";
 import { requirePermissionPage } from "@/server/auth/session";
+import { requestDb } from "@/server/db/request-db";
+import { dashboardStats, listOrders, recentAttention } from "@/server/services/admin";
 
-export default async function AdminHome() {
-  const user = await requirePermissionPage("admin:access");
+export default async function AdminDashboard() {
+  const user = await requirePermissionPage("orders:read");
+  const db = await requestDb();
+  const [s, attention, recent] = await Promise.all([
+    dashboardStats(db),
+    recentAttention(db),
+    listOrders(db, { sort: "created", dir: "desc", page: 1 }),
+  ]);
+
+  const tiles: { label: string; value: string | number; href: string; highlight?: boolean }[] = [
+    { label: "Needs design review", value: s.review, href: "/admin/orders?status=DESIGN_REVIEW", highlight: s.review > 0 },
+    { label: "Ready / in production", value: s.production, href: "/admin/orders?status=IN_PRODUCTION" },
+    { label: "Printed / QC", value: s.printed, href: "/admin/orders?status=PRINTED" },
+    { label: "Shipped / delivered", value: s.shipped, href: "/admin/orders?status=SHIPPED" },
+    { label: "Awaiting payment", value: s.new, href: "/admin/orders?status=PAYMENT_PENDING" },
+    { label: "Paid", value: s.paid, href: "/admin/orders?payment=PAID" },
+    { label: "All orders", value: s.total, href: "/admin/orders" },
+    { label: "Cancelled", value: s.cancelled, href: "/admin/orders?status=CANCELLED" },
+  ];
+
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-semibold">Welcome, {user.name}</h1>
-      <p className="mt-2 text-ink-muted">Order metrics arrive with the orders milestone.</p>
+    <div className="mx-auto flex max-w-6xl flex-col gap-8">
+      <div>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <p className="text-sm text-ink-muted">Signed in as {user.name}</p>
+      </div>
+
+      <section aria-label="Revenue and mix" className="grid gap-4 sm:grid-cols-3">
+        <Card className="p-5">
+          <p className="text-sm text-ink-muted">Paid revenue</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{formatInr(s.revenuePaise, { whole: true })}</p>
+          <p className="mt-1 text-xs text-ink-muted">{s.piecesPaid.toLocaleString("en-IN")} pieces paid</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-sm text-ink-muted">Bulk (B2B) orders</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{s.b2b}</p>
+          <Link href="/admin/orders?channel=B2B" className="mt-1 inline-block text-xs font-medium text-ginger hover:underline">View bulk orders</Link>
+        </Card>
+        <Card className="p-5">
+          <p className="text-sm text-ink-muted">Single (B2C) orders</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{s.b2c}</p>
+          <Link href="/admin/orders?channel=B2C" className="mt-1 inline-block text-xs font-medium text-ginger hover:underline">View single orders</Link>
+        </Card>
+      </section>
+
+      <section aria-label="Order pipeline">
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {tiles.map((tile) => (
+            <li key={tile.label}>
+              <Link
+                href={tile.href}
+                className={`block rounded-[var(--radius-md)] border p-4 transition-colors hover:border-ink ${tile.highlight ? "border-ginger bg-ginger-soft" : "border-line bg-surface"}`}
+              >
+                <p className="text-2xl font-semibold tabular-nums">{tile.value}</p>
+                <p className="text-sm text-ink-muted">{tile.label}</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {attention.length > 0 && (
+        <section aria-labelledby="attention" className="rounded-[var(--radius-md)] border border-warning/30 bg-warning-soft p-4">
+          <h2 id="attention" className="flex items-center gap-2 font-semibold text-warning">
+            <AlertTriangle className="size-4" aria-hidden /> Needs attention ({s.attention})
+          </h2>
+          <ul className="mt-2 flex flex-col gap-1 text-sm">
+            {attention.map((o) => (
+              <li key={o.id}>
+                <Link href={`/admin/orders/${o.orderNumber}`} className="font-medium hover:underline">
+                  {o.orderNumber}
+                </Link>{" "}
+                — {o.needsAttention}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section aria-labelledby="recent">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 id="recent" className="font-semibold">Latest orders</h2>
+          <Link href="/admin/orders" className="flex items-center gap-1 text-sm font-medium text-ginger hover:underline">
+            All orders <ArrowRight className="size-4" aria-hidden />
+          </Link>
+        </div>
+        <Card className="divide-y divide-line">
+          {recent.rows.slice(0, 8).map((o) => (
+            <Link key={o.id} href={`/admin/orders/${o.orderNumber}`} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 hover:bg-surface-muted">
+              <span className="font-medium">{o.orderNumber}</span>
+              <span className="min-w-0 flex-1 truncate text-sm text-ink-muted">
+                {o.companyName ?? o.contactName} · {o.productSummary}
+              </span>
+              <StatusBadge status={o.status} />
+              <span className="w-24 text-right text-sm font-medium tabular-nums">{formatInr(o.totalPaise)}</span>
+            </Link>
+          ))}
+          {recent.rows.length === 0 && <p className="px-4 py-8 text-center text-sm text-ink-muted">No orders yet.</p>}
+        </Card>
+      </section>
     </div>
   );
 }

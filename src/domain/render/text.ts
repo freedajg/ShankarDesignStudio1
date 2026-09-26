@@ -41,6 +41,7 @@ export type Ctx2D = {
   fillText(text: string, x: number, y: number): void;
   save(): void;
   restore(): void;
+  scale(x: number, y: number): void;
 };
 
 export function measurerFor(ctx: Ctx2D): Measure {
@@ -93,15 +94,26 @@ export function layoutText(el: TextElement, measure: Measure): TextLayout {
   return { hw: Math.max(-minX, maxX), hh: Math.max(-minY, maxY), lines };
 }
 
-/** Draws text centred on the current origin (caller has translated/rotated). */
+/**
+ * Draws text centred on the current origin (caller has translated/rotated).
+ *
+ * Glyphs are always laid out at REF_PX (the size they were measured at) and the
+ * context is scaled to the target size, so size-dependent font hinting can never
+ * make a small on-screen preview proportion differently from a 300 DPI print.
+ * Outlines stay vector-sharp. (Verified by the "same physical size at every
+ * resolution" test.)
+ */
 export function drawText(ctx: Ctx2D, el: TextElement, layout: TextLayout, pxPerMm: number) {
+  const k = (el.fontSize * pxPerMm) / REF_PX; // target px per reference px
+  const mmToRef = REF_PX / el.fontSize;
   ctx.save();
-  ctx.font = textFontAt(el, el.fontSize * pxPerMm);
+  ctx.scale(k, k);
+  ctx.font = textFontAt(el, REF_PX);
   ctx.fillStyle = el.fill;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   for (const line of layout.lines) {
-    if (line.text) ctx.fillText(line.text, line.dx * pxPerMm, line.dy * pxPerMm);
+    if (line.text) ctx.fillText(line.text, line.dx * mmToRef, line.dy * mmToRef);
   }
   ctx.restore();
 }
