@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { siteUrl } from "@/lib/site-url";
 
 /**
  * Server environment, validated once. Missing or inconsistent configuration fails
@@ -15,13 +16,20 @@ const bool = z
 const schema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-    APP_URL: z.string().url().default("http://localhost:3000"),
+    /**
+     * Demo mode: embedded database + local files, auto-filled with sample data,
+     * simulated payments. On by default in production when no DATABASE_URL is set,
+     * so a fresh deployment is immediately presentable. Data is not durable.
+     */
+    DEMO_MODE: bool,
+    APP_URL: z.string().url().default(() => siteUrl().origin),
 
     DATABASE_URL: z.string().optional(),
-    PGLITE_DATA_DIR: z.string().default(".data/pglite"),
+    // Serverless hosts (Vercel) only allow writing to /tmp.
+    PGLITE_DATA_DIR: z.string().default(() => (process.env.VERCEL ? "/tmp/sg-demo/pglite" : ".data/pglite")),
 
     STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
-    LOCAL_STORAGE_DIR: z.string().default(".data/storage"),
+    LOCAL_STORAGE_DIR: z.string().default(() => (process.env.VERCEL ? "/tmp/sg-demo/storage" : ".data/storage")),
     SUPABASE_URL: z.string().url().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 
@@ -54,12 +62,18 @@ const schema = z
     if (env.EMAIL_PROVIDER === "resend") {
       need(!!env.RESEND_API_KEY, "RESEND_API_KEY", "required when EMAIL_PROVIDER=resend");
     }
-    // A deployed shop must not silently run on development stand-ins.
-    if (prod && !env.ALLOW_DEV_PAYMENTS) {
+    // A deployed shop must not silently run on development stand-ins — unless it is
+    // an explicit, clearly-labelled demo.
+    if (prod && !env.ALLOW_DEV_PAYMENTS && !isDemo(env)) {
       need(env.PAYMENT_PROVIDER !== "dev", "PAYMENT_PROVIDER", "the dev payment provider is refused in production (set ALLOW_DEV_PAYMENTS=true only for a staging demo)");
       need(!!env.DATABASE_URL, "DATABASE_URL", "production needs a real Postgres database (embedded PGlite is for development)");
     }
-  });
+  })
+  .transform((env) => ({ ...env, DEMO_MODE: isDemo(env) }));
+
+function isDemo(env: { DEMO_MODE: boolean; NODE_ENV: string; DATABASE_URL?: string }) {
+  return env.DEMO_MODE || (env.NODE_ENV === "production" && !env.DATABASE_URL);
+}
 
 export type Env = z.infer<typeof schema>;
 
@@ -67,10 +81,13 @@ let cached: Env | undefined;
 
 export function env(): Env {
   if (cached) return cached;
-  const parsed = schema.safeParse(process.env);
+  // Hosting dashboards make it easy to save a variable with an empty value;
+  // treat blank values as "not set" so defaults apply instead of failing validation.
+  const raw = Object.fromEntries(Object.entries(process.env).filter(([, v]) => v !== undefined && v.trim() !== ""));
+  const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  - ${i.path.join(".") || "(env)"}: ${i.message}`);
-    throw new Error(`Invalid environment configuration:\n${lines.join("\n")}\nSee design-studio/.env.example.`);
+    throw new Error(`Invalid environment configuration:\n${lines.join("\n")}\nSee .env.example.`);
   }
   cached = parsed.data;
   return cached;

@@ -1,4 +1,5 @@
 import "server-only";
+import path from "node:path";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./schema";
 import { env } from "../env";
@@ -34,7 +35,11 @@ async function connect(): Promise<Db> {
   const client = new PGlite(dataDir);
   const db = drizzle(client, { schema });
   // Embedded dev database: keep it migrated automatically so `npm run dev` just works.
-  await migrate(db, { migrationsFolder: "drizzle" });
+  await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
+  if (e.DEMO_MODE) {
+    const { ensureDemoData } = await import("../demo");
+    await ensureDemoData(db as unknown as Db);
+  }
   return db as unknown as Db;
 }
 

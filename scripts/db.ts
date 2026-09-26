@@ -1,7 +1,8 @@
 /**
  * Database CLI.
  *   npm run db:migrate                 apply SQL migrations (PGlite or DATABASE_URL)
- *   npm run db:seed                    demo catalogue + settings (+ dev staff users on the embedded dev DB)
+ *   npm run db:seed                    demo catalogue + settings (+ dev staff users on the embedded dev DB);
+ *                                      with STORAGE_DRIVER=supabase also creates the private storage buckets
  *   npm run db:user -- --email a@b.c --name "Asha" --role ADMIN    (password from STAFF_PASSWORD env)
  */
 import { parseArgs } from "node:util";
@@ -9,11 +10,7 @@ import { getDb } from "../src/server/db/client";
 import { ensureStaffUser, seedDemoData } from "../src/server/db/seed";
 import { hashPassword } from "../src/server/auth/crypto";
 
-// Development-only staff logins, created only on the embedded (PGlite) dev database.
-export const DEV_STAFF = [
-  { email: "admin@studio.local", name: "Dev Admin", password: "admin-dev-password", role: "ADMIN" as const },
-  { email: "production@studio.local", name: "Dev Production", password: "production-dev-password", role: "PRODUCTION" as const },
-];
+import { DEMO_STAFF as DEV_STAFF } from "../src/server/demo";
 
 async function migrate() {
   const url = process.env.DATABASE_URL;
@@ -30,12 +27,35 @@ async function migrate() {
   console.log("✓ migrations applied");
 }
 
+/** Creates the private Supabase Storage buckets (idempotent). No-op for local storage. */
+async function ensureBuckets() {
+  if (process.env.STORAGE_DRIVER !== "supabase") return;
+  const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("STORAGE_DRIVER=supabase needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY");
+  const { BUCKETS } = await import("../src/server/storage");
+  for (const name of Object.values(BUCKETS)) {
+    const res = await fetch(`${url}/storage/v1/bucket`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, apikey: key, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: name, name, public: false }),
+    });
+    const body = await res.text();
+    if (res.ok) console.log(`✓ created private bucket ${name}`);
+    else if (/already exists|Duplicate/i.test(body)) console.log(`✓ bucket ${name} exists`);
+    else throw new Error(`Could not create bucket ${name} (${res.status}): ${body}`);
+  }
+}
+
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
   if (cmd === "migrate") return migrate();
 
+  if (cmd === "buckets") return ensureBuckets();
+
   if (cmd === "seed") {
     await migrate();
+    await ensureBuckets();
     const db = await getDb();
     await seedDemoData(db);
     console.log("✓ demo catalogue and settings seeded (DEMO values — see docs/OPEN_QUESTIONS.md)");

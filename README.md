@@ -25,6 +25,56 @@ Development staff logins (created only on the embedded dev database):
 
 **All catalogue prices, tiers, print costs, print-area sizes, tax and shipping values are DEMO placeholders** (`is_demo = true`) until confirmed — see `docs/OPEN_QUESTIONS.md`.
 
+## Deploy to Vercel
+
+### Option A — instant demo (no settings)
+
+Import the repository in Vercel and deploy. With **no environment variables**, the site runs in **demo mode**:
+an embedded database and file storage on the server's temporary disk, filled automatically with the sample
+catalogue, four sample orders (single and bulk, at different production stages) and two staff logins, which
+are shown on `/admin/login`. Payments are simulated and every page carries a "Demo" banner.
+
+Good for showing the product; **not for real orders** — demo data lives on the server's temporary disk, so it
+resets whenever Vercel restarts the server (e.g. after inactivity or a redeploy), and a design being edited
+at that moment is kept only in the visitor's browser.
+
+### Option B — real data (Supabase)
+
+For durable data, connect a real database and file storage; setting `DATABASE_URL` switches demo mode off, and the
+site then refuses to run on simulated payments unless you explicitly allow them. Use a free Supabase project for both.
+
+**1. Create a Supabase project** (supabase.com). From *Project Settings* copy:
+- the **Transaction pooler** connection string (port 6543) → `DATABASE_URL`
+- the **Project URL** → `SUPABASE_URL`
+- the **service_role** secret → `SUPABASE_SERVICE_ROLE_KEY` (server-only; never put it in a `NEXT_PUBLIC_` variable)
+
+**2. Prepare the database and storage once**, from your computer:
+
+```bash
+npm install
+export DATABASE_URL="postgresql://…pooler.supabase.com:6543/postgres"
+export STORAGE_DRIVER=supabase SUPABASE_URL="https://xxxx.supabase.co" SUPABASE_SERVICE_ROLE_KEY="…"
+npm run db:seed        # tables + demo catalogue + the 4 private storage buckets
+STAFF_PASSWORD="a-long-password" npm run db:user -- --email you@example.com --name "Your Name" --role ADMIN
+```
+
+**3. In Vercel → Project → Settings → Environment Variables** add:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | the pooler connection string |
+| `STORAGE_DRIVER` | `supabase` |
+| `SUPABASE_URL` | your project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | the service_role secret |
+| `PAYMENT_PROVIDER` | `razorpay` — plus `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` |
+| *or, for a demo without real payments* `ALLOW_DEV_PAYMENTS` | `true` (checkout shows a clearly labelled simulated payment — no money moves) |
+| `APP_URL` | optional — your site address, e.g. `https://studio.example.com` (leave unset to use the Vercel URL; don't save it blank-but-present with spaces) |
+| `EMAIL_PROVIDER` / `RESEND_API_KEY` | optional — order emails (defaults to logging only) |
+
+Then **Redeploy**. If a required value is missing, the Vercel *Logs* show `Invalid environment configuration` with the exact variable name.
+
+For Razorpay, point a webhook at `https://<your-site>/api/payments/webhook` for `payment.captured` and `payment.failed`.
+
 ## Scripts
 
 | Command | What |

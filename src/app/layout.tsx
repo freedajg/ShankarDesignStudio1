@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
+import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_URL ?? "http://localhost:3000"),
+  metadataBase: siteUrl(),
   title: {
     default: "Custom T-Shirts, Designed by You | Sweet Ginger Design Studio",
     template: "%s | Sweet Ginger Design Studio",

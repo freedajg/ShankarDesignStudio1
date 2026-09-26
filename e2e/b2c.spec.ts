@@ -94,7 +94,7 @@ test("B2C: design front and back, change colour, order, pay, and produce", async
   await admin.getByLabel("Move order to").selectOption("IN_PRODUCTION");
   await admin.getByRole("button", { name: "Update status" }).click();
   await expect(admin.getByText("Moved to In production.")).toBeVisible();
-  await expect(admin.getByTestId("status-history")).toContainText("Dev Admin");
+  await expect(admin.getByTestId("status-history")).toContainText("Demo Admin");
 
   // the customer's page reflects production progress
   await page.reload();

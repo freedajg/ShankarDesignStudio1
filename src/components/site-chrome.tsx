@@ -39,10 +39,18 @@ export function SiteFooter() {
   );
 }
 
-export function DemoPricingBanner() {
+export function DemoPricingBanner({ demoMode = false }: { demoMode?: boolean }) {
   return (
     <div className="border-b border-info/20 bg-info-soft px-4 py-2 text-center text-xs text-info">
-      <strong className="font-semibold">Demo catalogue.</strong> Prices, bulk tiers and print sizes are placeholders pending confirmation — not live prices.
+      {demoMode ? (
+        <>
+          <strong className="font-semibold">Demo.</strong> Sample products, prices and orders — payments are simulated and demo data may reset.
+        </>
+      ) : (
+        <>
+          <strong className="font-semibold">Demo catalogue.</strong> Prices, bulk tiers and print sizes are placeholders pending confirmation — not live prices.
+        </>
+      )}
     </div>
   );
 }

@@ -11,10 +11,12 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Native / WASM packages run as plain Node modules on the server, not bundled.
   serverExternalPackages: ["@electric-sql/pglite", "@napi-rs/canvas", "sharp", "postgres"],
-  // Production renders read design fonts and mockups from disk; make sure they ship with the functions.
+  // Server renders (cart/order/admin previews, print files) read design fonts and
+  // mockups from disk; ship them with every server function.
   outputFileTracingIncludes: {
-    "/api/**/*": ["./public/fonts/design/**/*", "./public/mockups/**/*", "./drizzle/**/*"],
-    "/admin/**/*": ["./public/fonts/design/**/*", "./public/mockups/**/*"],
+    // (drizzle + pglite: the demo-mode embedded database migrates itself at start-up)
+    "/*": ["./public/fonts/design/**/*", "./public/mockups/**/*", "./drizzle/**/*", "./node_modules/@electric-sql/pglite/dist/**/*"],
+    "/**/*": ["./public/fonts/design/**/*", "./public/mockups/**/*", "./drizzle/**/*", "./node_modules/@electric-sql/pglite/dist/**/*"],
   },
   // Pin the project root (the app has also lived inside a larger monorepo).
   turbopack: { root: path.resolve(".") },

@@ -5,6 +5,8 @@ import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { requirePermissionPage } from "@/server/auth/session";
 import { logout } from "../login/actions";
+import { Badge } from "@/components/ui/feedback";
+import { env } from "@/server/env";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s · Admin" }, robots: { index: false } };
 
@@ -20,6 +22,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       <aside className="border-b border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:flex-col lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between gap-4 px-4 py-3 lg:py-5">
           <Logo href="/admin" />
+          {env().DEMO_MODE && <Badge tone="info">Demo</Badge>}
         </div>
         <nav aria-label="Admin" className="flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-1 lg:flex-col lg:pb-0">
           {nav.map(({ href, label, icon: Icon }) => (
