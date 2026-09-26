@@ -20,7 +20,7 @@ Vertical slices; each milestone ends with: app runs → tests pass → UX review
 
 | Milestone | Status |
 |---|---|
-| 1 Foundation | in progress |
+| 1 Foundation | ✅ done — app, tokens + UI kit, schema + migration, demo seed, staff auth, proxy guard, 17 tests |
 | 2–11 | not started |
 
 (Updated as work lands — see git history for detail.)

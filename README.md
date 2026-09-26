@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sweet Ginger Design Studio
 
-## Getting Started
+Self-service custom apparel studio for Sweet Ginger Fashions (The T-Shirt Shop · Sweet Ginger Basics · Ginger Prints): choose a garment, design it, see it on the shirt, order one piece or a bulk size-run, and hand production a complete, printable order.
 
-First, run the development server:
+> This folder is a standalone app. The repository root contains an unrelated project (VoiceLab); nothing here depends on it.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd design-studio
+npm install
+npm run dev          # migrates + seeds an embedded Postgres, then starts http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No accounts, keys or Docker needed for development:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Concern | Development | Production |
+|---|---|---|
+| Database | embedded PGlite in `.data/pglite` | Supabase Postgres (`DATABASE_URL`) |
+| Files | `.data/storage` | Supabase Storage (private buckets) |
+| Payments | **development provider — no money moves** | Razorpay |
+| Email | printed to the server console | Resend |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Development staff logins (created only on the embedded dev database):
 
-## Learn More
+- `admin@studio.local` / `admin-dev-password` (ADMIN)
+- `production@studio.local` / `production-dev-password` (PRODUCTION)
 
-To learn more about Next.js, take a look at the following resources:
+**All catalogue prices, tiers, print costs, print-area sizes, tax and shipping values are DEMO placeholders** (`is_demo = true`) until confirmed — see `docs/OPEN_QUESTIONS.md`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Command | What |
+|---|---|
+| `npm run dev` | seed (idempotent) + dev server |
+| `npm test` | unit + integration tests (in-memory Postgres) |
+| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run typecheck` / `npm run lint` | static checks |
+| `npm run db:generate` | generate a SQL migration after editing `src/server/db/schema.ts` |
+| `npm run db:migrate` / `npm run db:seed` | apply migrations / seed demo data |
+| `STAFF_PASSWORD=… npm run db:user -- --email … --name … --role ADMIN` | create a staff login |
+| `npm run mockups` | regenerate garment mockup layers |
 
-## Deploy on Vercel
+## Docs
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`docs/PRD.md` · `docs/ARCHITECTURE.md` · `docs/DATABASE.md` · `docs/DESIGN_SYSTEM.md` · `docs/BUSINESS_RULES.md` · `docs/OPEN_QUESTIONS.md` · `docs/IMPLEMENTATION_PLAN.md` · `docs/TEST_PLAN.md`

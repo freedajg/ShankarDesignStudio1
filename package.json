@@ -3,10 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "npm run db:seed --silent",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --conditions=react-server scripts/db.ts migrate",
+    "db:seed": "tsx --conditions=react-server scripts/db.ts seed",
+    "db:user": "tsx --conditions=react-server scripts/db.ts user",
+    "mockups": "tsx scripts/generate-mockups.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
@@ -32,6 +42,7 @@
     "radix-ui": "^1.6.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
     "sharp": "^0.35.4",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
@@ -51,5 +62,8 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }
