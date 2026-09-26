@@ -34,7 +34,7 @@ Development staff logins (created only on the embedded dev database):
 |---|---|
 | `npm run dev` | seed (idempotent) + dev server |
 | `npm test` | unit + integration tests (in-memory Postgres) |
-| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run test:e2e` | Playwright end-to-end tests (builds and starts the app on :3100 with a fresh database) |
 | `npm run typecheck` / `npm run lint` | static checks |
 | `npm run db:generate` | generate a SQL migration after editing `src/server/db/schema.ts` |
 | `npm run db:migrate` / `npm run db:seed` | apply migrations / seed demo data |
@@ -44,3 +44,7 @@ Development staff logins (created only on the embedded dev database):
 ## Docs
 
 `docs/PRD.md` · `docs/ARCHITECTURE.md` · `docs/DATABASE.md` · `docs/DESIGN_SYSTEM.md` · `docs/BUSINESS_RULES.md` · `docs/OPEN_QUESTIONS.md` · `docs/IMPLEMENTATION_PLAN.md` · `docs/TEST_PLAN.md`
+
+## Status
+
+Milestones 1–10 are built and tested (58 unit/integration tests, 9 end-to-end tests including the B2C and B2B acceptance scenarios). See `docs/IMPLEMENTATION_PLAN.md` for the honest list of known gaps — notably Razorpay and Supabase Storage have not yet been exercised against live accounts, and admin catalogue editing is not built yet.

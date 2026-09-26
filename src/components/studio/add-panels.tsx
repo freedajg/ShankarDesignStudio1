@@ -1,7 +1,7 @@
 "use client";
 
 import { ImagePlus, Loader2, Type, UploadCloud } from "lucide-react";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/feedback";
@@ -16,6 +16,8 @@ export function AddTextPanel({ onAdded }: { onAdded?: () => void }) {
   const addText = useStudio((s) => s.addText);
   const side = useStudio((s) => s.side);
   const [text, setText] = useState("");
+  // unique per instance: desktop rail and mobile sheet can both be mounted
+  const inputId = useId();
   const add = () => {
     const id = addText(text.trim() || undefined);
     if (!id) return toast.error("That side is full. Remove something to add more.");
@@ -30,11 +32,11 @@ export function AddTextPanel({ onAdded }: { onAdded?: () => void }) {
         add();
       }}
     >
-      <label htmlFor="quick-text" className="text-sm font-medium">
+      <label htmlFor={inputId} className="text-sm font-medium">
         Add text to the {side}
       </label>
       <div className="flex gap-2">
-        <Input id="quick-text" value={text} maxLength={200} placeholder="Your text" onChange={(e) => setText(e.target.value)} />
+        <Input id={inputId} value={text} maxLength={200} placeholder="Your text" onChange={(e) => setText(e.target.value)} />
         <Button type="submit" variant="primary" aria-label="Add text">
           <Type aria-hidden /> Add
         </Button>

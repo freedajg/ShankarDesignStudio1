@@ -80,7 +80,7 @@ Editing a saved design creates version N+1; version N (possibly in an order) nev
 
 ## 6. Authentication and authorization
 
-- **Customers** do not need accounts (guest checkout). Ownership of anonymous work is proven by random, httpOnly cookies whose hashes are stored: `sg_owner` (designs & uploads), `sg_cart` (cart). Orders get a 32-byte access token; the confirmation link carries it and only its hash is stored. Order lookups require the token (or staff role) → no IDOR by order number.
+- **Customers** do not need accounts (guest checkout). Ownership of anonymous work is proven by random, httpOnly cookies whose hashes are stored: `sg_owner` (designs & uploads), `sg_cart` (cart). Only the owner of a design can add its versions to a cart; uploads are visible only to their owner and staff. Orders get a 32-byte access token; the confirmation link carries it and only its hash is stored. Order lookups require the token (or staff role) → no IDOR by order number.
 - **Staff** log in with email + password (scrypt, per-user salt, constant-time compare). Sessions: 32-byte random token in an httpOnly, `SameSite=Lax`, `Secure` (in prod) cookie; only SHA-256 of the token stored; 7-day expiry.
 - **Roles**: `CUSTOMER`, `ADMIN`, `PRODUCTION` (enum; `SALES`, `DESIGNER`, `SUPER_ADMIN` can be added). `requireRole()` is called inside every admin page, route handler and server action — `proxy.ts` only does an optimistic redirect.
 - Why not Supabase Auth for V1: staff are a handful of accounts and customers are guests, so the only auth needed is staff login; a built-in implementation keeps local dev and tests self-contained. The `auth` service is the seam if Supabase Auth (magic links for customers) is added with accounts in V2.
@@ -138,3 +138,11 @@ Order sync to the existing store is an open question (see OPEN_QUESTIONS.md); an
 | `EMAIL_PROVIDER` | `console` | `resend` + `RESEND_API_KEY` |
 
 `src/server/env.ts` validates env at startup with clear messages; production refuses dev drivers unless explicitly allowed.
+
+## 13. Implementation notes (as built)
+
+- **Rendering fidelity.** Text is laid out once from measurements at a 200 px reference size and always drawn at that size under a scale transform, in the browser (custom Fabric object) and on the server (Skia). A test renders the same text at 40/150/300 DPI and requires identical physical width (±1.5%) and ink inside the validated box.
+- **Printed look.** The garment is `mask ∩ colour`; the design is drawn next; fabric shading (multiply) and highlights (screen) are composited *over* both, so the print follows folds. Same order in the studio, previews and the job sheet.
+- **Previews** of immutable versions are rendered server-side and cached in `design-previews`; print files are cached in `production-files` (regenerated if the renderer version changes).
+- **Status history and audit** use `clock_timestamp()` so several changes in one transaction keep their order.
+- **Supabase setup:** apply `drizzle/*.sql` with `npm run db:migrate` (DATABASE_URL set), create private buckets `artwork-originals`, `artwork-processed`, `design-previews`, `production-files`, and enable RLS with no policies on every table so the public anon key can read nothing (the app connects server-side).

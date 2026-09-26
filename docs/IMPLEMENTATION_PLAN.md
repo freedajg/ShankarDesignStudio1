@@ -20,7 +20,27 @@ Vertical slices; each milestone ends with: app runs → tests pass → UX review
 
 | Milestone | Status |
 |---|---|
-| 1 Foundation | ✅ done — app, tokens + UI kit, schema + migration, demo seed, staff auth, proxy guard, 17 tests |
-| 2–11 | not started |
+| 1 Foundation | ✅ app, tokens + UI kit, schema + migrations, demo seed, staff auth, proxy guard |
+| 2 Catalogue | ✅ product grid, product pages with engine-computed bulk tables, bulk landing, generated mockups |
+| 3 Design engine | ✅ Fabric view over the design store; text + PNG/JPG; move/scale/rotate constrained to print area; front/back; area switching; undo/redo; layers; keyboard; mobile sheets |
+| 4 Persistence | ✅ local drafts, server autosave, immutable versions, reopen by link, refresh/offline recovery |
+| 5 Pricing | ✅ single pricing engine (tiers, size adjustments, per-side print cost, tax, shipping) |
+| 6 Cart | ✅ server-priced cart with size breakdown, stock + ownership checks, previews of the frozen design |
+| 7 Checkout & payment | ✅ idempotent checkout, Razorpay + dev providers, signature/webhook verification, retry, emails |
+| 8 Admin | ✅ dashboard, order list (search/filter/sort/page), order detail, role-aware status workflow, audit |
+| 9 Production | ✅ 300 DPI physical-size print PNGs, DTF/vinyl/embroidery adapters, design JSON, PDF job sheet, artwork downloads |
+| 10 Hardening | ✅ 58 unit/integration + 9 Playwright E2E tests (B2C + B2B acceptance, persistence, security, mobile) — see gaps below |
+| 11 Optional AI | not started |
 
-(Updated as work lands — see git history for detail.)
+## Known gaps (honest list)
+
+- **Razorpay** is implemented against its documented Orders API, checkout signature and webhook HMAC, but has **not been exercised against a live/test Razorpay account** (no keys in this environment). Run one sandbox payment before going live.
+- **Supabase Storage driver** is implemented against the Storage REST API but untested against a live project. Create the four private buckets listed in ARCHITECTURE §10.
+- **Admin catalogue/pricing editing** is not built yet: products, prices, tiers, print areas and settings are data (seed/SQL), not code — an admin CRUD screen is the next step.
+- **Customer accounts** (saved-design list, order history, reorder button) are not built. The data model supports them: designs are versioned and reopenable by link on the same device; a reorder is "open design → add to cart".
+- **B2B offline payment** (bank transfer / invoice) and a **quote workflow** above a quantity threshold are not built (OPEN_QUESTIONS #12, #25).
+- **Content-Security-Policy** header not yet set (other security headers are).
+- **Mockups** are generated silhouettes; replace with real flat-lay photography (mask + shade layers) per OPEN_QUESTIONS #24.
+- E2E covers moving/rotating via the accessible controls; direct mouse/touch dragging on the canvas is exercised manually and by the constraint unit tests, not by an E2E gesture.
+- `rate_limits` rows are never pruned (tiny table; add a periodic cleanup).
+- With the embedded dev database, stop `npm run dev` before running `npm run db:*` commands (one process per PGlite directory).

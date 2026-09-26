@@ -32,5 +32,20 @@ Commands: `npm test` (Vitest unit + integration), `npm run test:e2e` (Playwright
 6. Order page without token → not found.
 7. Failed payment → order pending, retry possible, design intact.
 
+## Current results
+- `npm test`: 58 passing (unit + integration on in-memory Postgres, real image processing and rendering).
+- `npm run test:e2e`: 9 passing (desktop Chromium + Pixel 7) against a production build.
+
 ## Production-readiness checklist
-Tracked in the final milestone summary; mirrors the checklist in the build brief (customer, backend, admin, quality).
+
+| Area | Item | State |
+|---|---|---|
+| Customer | product/colour/size selection, text, upload, move/resize/rotate/delete, front/back, print area | ✅ E2E |
+| Customer | design persists across colour/size/quantity/side/refresh | ✅ E2E |
+| Customer | live price, B2C, B2B size breakdown + tiers, cart, checkout | ✅ E2E |
+| Backend | DB constraints, server-side pricing, payment verification (dev), idempotency, inventory | ✅ integration |
+| Backend | authorization (staff roles, owner cookies, order tokens), upload validation, private storage, audit | ✅ integration + E2E |
+| Backend | Razorpay live sandbox, Supabase storage live | ⚠️ not yet exercised (no credentials) |
+| Admin | order list, detail, design preview, downloads, production files, status + history | ✅ E2E |
+| Quality | mobile flow, error/empty/loading states, keyboard-operable controls | ✅ E2E / manual |
+| Quality | CSP header, formal accessibility audit (screen reader pass), load test | ⚠️ pending |
