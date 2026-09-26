@@ -27,6 +27,8 @@ Official docs sites were not reachable from the build environment, so models and
 | Output | base64 PNG/WebP/JPEG | base64 `inlineData` |
 | Safety | provider moderation (`moderation: "auto"`), refusals returned as errors | `promptFeedback.blockReason` / finish reasons |
 
+OpenAI keys that can't use the newest model yet fall back automatically to `gpt-image-1.5`, then `gpt-image-1`. **OpenRouter** is also supported (one key for many models); like Gemini it returns images with a background, which is lifted the same way.
+
 **Selected:** OpenAI `gpt-image-2.5-flare` as the **primary** provider — native transparency is the decisive requirement for apparel artwork (no lossy background removal), plus print-friendly custom sizes, multiple variations per call and image-conditioned "generate similar". **Fallback:** Gemini `gemini-3.1-flash-image`, used only if configured. Gemini is asked for a plain flat background (black on dark shirts, white on light) which `background.ts` lifts off conservatively — only when the border is one uniform colour and only pixels connected to it; if that isn't safe the image is kept as-is and the customer sees the standard "no transparent background" print warning. The provider's untouched output is always stored as the ORIGINAL. Model IDs are configuration (`OPENAI_IMAGE_MODEL`, `GEMINI_IMAGE_MODEL`), not code.
 
 Pricing and rate limits are account-specific; check the provider console before launch. Generation is metered here by `AI_MAX_GENERATIONS_PER_SESSION` and `AI_VARIATIONS`.
@@ -85,8 +87,10 @@ Progress is streamed from the server as NDJSON stages (`interpreting → generat
 |---|---|---|
 | `OPENAI_API_KEY` | — | enables OpenAI |
 | `GEMINI_API_KEY` | — | enables Gemini |
-| `AI_IMAGE_PROVIDER` | `auto` | `auto` (first with a key) · `openai` · `gemini` · `off` |
-| `AI_FALLBACK_PROVIDER` | `auto` | `auto` (the other configured one) · `openai` · `gemini` · `none` |
+| `OPENROUTER_API_KEY` | — | enables OpenRouter (chat completions with `modalities: ["image","text"]`) |
+| `OPENROUTER_IMAGE_MODEL` | `google/gemini-3.1-flash-image-preview` | any OpenRouter image-output model |
+| `AI_IMAGE_PROVIDER` | `auto` | `auto` (first with a key: OpenAI, Gemini, OpenRouter) · `openai` · `gemini` · `openrouter` · `off` |
+| `AI_FALLBACK_PROVIDER` | `auto` | `auto` (the next configured one) · `openai` · `gemini` · `openrouter` · `none` |
 | `OPENAI_IMAGE_MODEL` / `GEMINI_IMAGE_MODEL` | `gpt-image-2.5-flare` / `gemini-3.1-flash-image` | |
 | `AI_IMAGE_QUALITY` | `medium` | OpenAI quality (cost vs detail) |
 | `AI_VARIATIONS` | `3` | options per generation (1–4) |

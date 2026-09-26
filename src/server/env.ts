@@ -46,13 +46,15 @@ const schema = z
     STAFF_NOTIFY_EMAIL: z.string().optional(),
 
     // AI design generation (docs/AI_DESIGN_GENERATION.md). Keys are server-only.
-    AI_IMAGE_PROVIDER: z.enum(["auto", "openai", "gemini", "fixture", "off"]).default("auto"),
-    AI_FALLBACK_PROVIDER: z.enum(["auto", "openai", "gemini", "none"]).default("auto"),
+    AI_IMAGE_PROVIDER: z.enum(["auto", "openai", "gemini", "openrouter", "fixture", "off"]).default("auto"),
+    AI_FALLBACK_PROVIDER: z.enum(["auto", "openai", "gemini", "openrouter", "none"]).default("auto"),
     OPENAI_API_KEY: z.string().optional(),
     OPENAI_IMAGE_MODEL: z.string().default("gpt-image-2.5-flare"),
     AI_IMAGE_QUALITY: z.enum(["low", "medium", "high", "auto"]).default("medium"),
     GEMINI_API_KEY: z.string().optional(),
     GEMINI_IMAGE_MODEL: z.string().default("gemini-3.1-flash-image"),
+    OPENROUTER_API_KEY: z.string().optional(),
+    OPENROUTER_IMAGE_MODEL: z.string().default("google/gemini-3.1-flash-image-preview"),
     /** variations per generation */
     AI_VARIATIONS: z.coerce.number().int().min(1).max(4).default(3),
     /** generations allowed per browser session (owner cookie) */
@@ -76,6 +78,7 @@ const schema = z
       need(!!env.RAZORPAY_KEY_SECRET, "RAZORPAY_KEY_SECRET", "required when PAYMENT_PROVIDER=razorpay");
     }
     if (env.AI_IMAGE_PROVIDER === "openai") need(!!env.OPENAI_API_KEY, "OPENAI_API_KEY", "required when AI_IMAGE_PROVIDER=openai");
+    if (env.AI_IMAGE_PROVIDER === "openrouter") need(!!env.OPENROUTER_API_KEY, "OPENROUTER_API_KEY", "required when AI_IMAGE_PROVIDER=openrouter");
     if (env.AI_IMAGE_PROVIDER === "gemini") need(!!env.GEMINI_API_KEY, "GEMINI_API_KEY", "required when AI_IMAGE_PROVIDER=gemini");
     if (env.EMAIL_PROVIDER === "resend") {
       need(!!env.RESEND_API_KEY, "RESEND_API_KEY", "required when EMAIL_PROVIDER=resend");

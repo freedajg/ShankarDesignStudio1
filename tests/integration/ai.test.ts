@@ -10,6 +10,7 @@ import { AppError } from "@/server/errors";
 import { FixtureImageProvider } from "@/server/ai/image-generation/fixture";
 import { OpenAIImageProvider } from "@/server/ai/image-generation/openai";
 import { GeminiImageProvider } from "@/server/ai/image-generation/gemini";
+import { OpenRouterImageProvider } from "@/server/ai/image-generation/openrouter";
 import { removeFlatBackground } from "@/server/ai/image-generation/background";
 import { ProviderError, type GenerateArtworkInput, type ImageGenerationProvider } from "@/server/ai/image-generation/types";
 import {
@@ -245,6 +246,25 @@ describe("provider adapters", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ promptFeedback: { blockReason: "SAFETY" } }))));
     const err = await new GeminiImageProvider("k", "m").generateArtwork(baseInput()).catch((e) => e);
     expect(err.kind).toBe("REFUSED");
+  });
+
+  it("OpenRouter: requests an image via chat completions and reads data-URL images", async () => {
+    const b64 = (await png()).toString("base64");
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { role: "assistant", images: [{ type: "image_url", image_url: { url: `data:image/png;base64,${b64}` } }] } }] })));
+    vi.stubGlobal("fetch", fetchMock);
+    const out = await new OpenRouterImageProvider("or-key", "google/gemini-3.1-flash-image-preview", "https://shop.example").generateArtwork(baseInput({ count: 3, prompt: "art\nTransparent background; only the artwork itself." }));
+    expect(out).toHaveLength(3);
+    expect(out[0]).toMatchObject({ mime: "image/png", transparent: false });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    const body = JSON.parse(init.body as string);
+    expect(body).toMatchObject({ model: "google/gemini-3.1-flash-image-preview", modalities: ["image", "text"], image_config: { aspect_ratio: "3:4" } });
+    expect(body.messages[0].content[0].text).toMatch(/flat solid black background/); // dark shirt → black, lifted later
+
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: { code: 402, message: "Insufficient credits" } }), { status: 402 })));
+    const broke = await new OpenRouterImageProvider("k", "m", "https://x").generateArtwork(baseInput({ count: 1 })).catch((e) => e);
+    expect(broke).toMatchObject({ kind: "CONFIG" });
+    expect(broke.detail).toMatch(/no credit/);
   });
 
   it("lifts a flat background but keeps the artwork", async () => {

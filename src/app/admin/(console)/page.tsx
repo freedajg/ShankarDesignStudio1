@@ -97,13 +97,13 @@ export default async function AdminDashboard() {
           </div>
           {ai.enabled ? (
             <p className="text-sm text-ink-muted">
-              Using {ai.providers.map((p) => `${p.name === "openai" ? "OpenAI" : p.name === "gemini" ? "Google Gemini" : p.name} (${p.model})`).join(", then ")} · {ai.limit} designs per customer per day · last 7 days:{" "}
+              Using {ai.providers.map((p) => `${p.name === "openai" ? "OpenAI" : p.name === "gemini" ? "Google Gemini" : p.name === "openrouter" ? "OpenRouter" : p.name} (${p.model})`).join(", then ")} · {ai.limit} designs per customer per day · last 7 days:{" "}
               {ai.week.SUCCEEDED ?? 0} succeeded, {ai.week.FAILED ?? 0} failed, {ai.week.REFUSED ?? 0} refused.
             </p>
           ) : (
             <p className="text-sm text-ink-muted">
               Customers see the button but can&apos;t generate yet. To switch it on, add <code className="rounded bg-surface-muted px-1">OPENAI_API_KEY</code> (or{" "}
-              <code className="rounded bg-surface-muted px-1">GEMINI_API_KEY</code>) in Vercel → Settings → Environment Variables for this environment, then redeploy.
+              <code className="rounded bg-surface-muted px-1">OPENROUTER_API_KEY</code>) in Vercel → Settings → Environment Variables for this environment, then redeploy.
             </p>
           )}
           {ai.lastFailure && (!ai.lastSuccess || ai.lastFailure.at > ai.lastSuccess.at) && (

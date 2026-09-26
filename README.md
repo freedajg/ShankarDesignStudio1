@@ -40,8 +40,16 @@ at that moment is kept only in the visitor's browser.
 
 ### Turning on AI design generation
 
-In Vercel → Project → Settings → Environment Variables, add **`OPENAI_API_KEY`** (and optionally
-`GEMINI_API_KEY` as a fallback), then redeploy. That's all — the "✨ Generate with AI" button in the studio
+In Vercel → Project → Settings → Environment Variables, add **one** of these (more than one gives a fallback),
+then redeploy:
+
+| Key | Get it from | Notes |
+|---|---|---|
+| `OPENAI_API_KEY` | platform.openai.com → API keys | best: true transparent backgrounds |
+| `OPENROUTER_API_KEY` | openrouter.ai → Keys | one key, many models; default `google/gemini-3.1-flash-image-preview` (`OPENROUTER_IMAGE_MODEL`) |
+| `GEMINI_API_KEY` | aistudio.google.com → API keys | Google directly |
+
+Tick the environment you use (Production and Preview) when adding the variable. That's all — the "✨ Generate with AI" button in the studio
 starts creating artwork. Keys stay on the server. Each browser can make 10 AI designs per 24 hours by default
 (`AI_MAX_GENERATIONS_PER_SESSION`). See [docs/AI_DESIGN_GENERATION.md](docs/AI_DESIGN_GENERATION.md) for models,
 costs and all options. On Vercel's Hobby plan functions may run up to 300 s, enough for image generation.

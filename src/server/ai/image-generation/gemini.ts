@@ -27,10 +27,7 @@ export class GeminiImageProvider implements ImageGenerationProvider {
   }
 
   private async one(input: GenerateArtworkInput, index: number): Promise<GeneratedImage> {
-    const prompt = input.prompt.replace(
-      /Transparent background;[^\n]*/i,
-      `Plain, completely flat solid ${bgFor(input.shirtColour.hex)} background with nothing else on it; only the artwork itself.`,
-    );
+    const prompt = flatBackgroundPrompt(input);
     const parts: object[] = [{ text: index ? `${prompt}\nVariation ${index + 1}: a distinctly different composition.` : prompt }];
     if (input.referenceImage) {
       parts.unshift({ inlineData: { mimeType: input.referenceImage.mime, data: input.referenceImage.data.toString("base64") } });
@@ -77,6 +74,17 @@ export class GeminiImageProvider implements ImageGenerationProvider {
     }
     return { data: Buffer.from(img.data, "base64"), mime: img.mimeType ?? "image/png", transparent: false };
   }
+}
+
+/**
+ * For models without transparency: ask for a plain flat background (lifted off
+ * afterwards by background.ts) instead of a transparent one.
+ */
+export function flatBackgroundPrompt(input: Pick<GenerateArtworkInput, "prompt" | "shirtColour">) {
+  return input.prompt.replace(
+    /Transparent background;[^\n]*/i,
+    `Plain, completely flat solid ${bgFor(input.shirtColour.hex)} background with nothing else on it; only the artwork itself.`,
+  );
 }
 
 /** A background colour that contrasts with typical artwork for this shirt, so it separates cleanly. */
