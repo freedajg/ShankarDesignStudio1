@@ -29,6 +29,13 @@
       "when": 1790440314424,
       "tag": "0003_order_item_position",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790443922165,
+      "tag": "0004_ai_generations",
+      "breakpoints": true
     }
   ]
 }

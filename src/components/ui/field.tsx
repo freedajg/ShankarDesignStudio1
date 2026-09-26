@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/cn";
 
 const control =
-  "w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3 text-[0.9375rem] text-ink placeholder:text-ink-subtle transition-colors focus-visible:border-ginger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ginger/30 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-danger";
+  "w-full rounded-[var(--radius-sm)] border border-line-strong bg-surface px-3 text-[0.9375rem] text-ink placeholder:text-ink-subtle transition-colors focus-visible:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-danger";
 
 export function Input({ className, ...props }: React.ComponentProps<"input">) {
   return <input className={cn(control, "h-11", className)} {...props} />;

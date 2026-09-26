@@ -15,9 +15,9 @@ export function ColourPicker() {
       <legend className="mb-2.5 text-sm font-medium">
         Shirt colour: <span className="font-normal text-ink-muted" data-testid="colour-name">{current?.name}</span>
       </legend>
-      <div role="radiogroup" aria-label="Shirt colour" className="flex flex-wrap gap-2.5">
+      <div role="radiogroup" aria-label="Shirt colour" className="flex flex-wrap gap-x-1 gap-y-3">
         {colours.map((c) => (
-          <Swatch key={c.id} hex={c.hex} name={c.name} selected={c.id === colourId} onSelect={() => setColour(c.id)} />
+          <Swatch key={c.id} hex={c.hex} name={c.name} selected={c.id === colourId} onSelect={() => setColour(c.id)} showLabel />
         ))}
       </div>
     </fieldset>
@@ -50,7 +50,7 @@ export function PrintMethodPicker() {
             onClick={() => setMethod(m.code)}
             className={cn(
               "rounded-[var(--radius-sm)] border p-3 text-left text-sm transition-colors",
-              m.code === code ? "border-ginger bg-ginger-soft" : "border-line-strong hover:border-ink",
+              m.code === code ? "border-ink bg-surface-muted shadow-[inset_0_0_0_1px_var(--color-ink)]" : "border-line-strong hover:border-ink",
             )}
           >
             <span className="font-medium">{m.name}</span>
@@ -81,7 +81,7 @@ export function PrintAreaPicker() {
             onClick={() => setArea(side, a.code)}
             className={cn(
               "rounded-[var(--radius-sm)] border px-3 py-2 text-left text-sm transition-colors",
-              a.code === current ? "border-ginger bg-ginger-soft" : "border-line-strong hover:border-ink",
+              a.code === current ? "border-ink bg-surface-muted shadow-[inset_0_0_0_1px_var(--color-ink)]" : "border-line-strong hover:border-ink",
             )}
           >
             <span className="block font-medium">{a.name}</span>
@@ -105,7 +105,7 @@ export function ProductOptions() {
         <p className="text-sm text-ink-muted">
           {[product.fabric, product.gsm && `${product.gsm} GSM`].filter(Boolean).join(" · ")}
         </p>
-        <Link href="/#products" className="mt-1 inline-block text-sm font-medium text-ginger hover:underline">
+        <Link href="/#products" className="mt-1 inline-block text-sm font-medium text-accent-ink hover:underline">
           Change product
         </Link>
       </div>

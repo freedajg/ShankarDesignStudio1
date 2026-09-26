@@ -43,12 +43,12 @@ export default async function AdminDashboard() {
         <Card className="p-5">
           <p className="text-sm text-ink-muted">Bulk (B2B) orders</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums">{s.b2b}</p>
-          <Link href="/admin/orders?channel=B2B" className="mt-1 inline-block text-xs font-medium text-ginger hover:underline">View bulk orders</Link>
+          <Link href="/admin/orders?channel=B2B" className="mt-1 inline-block text-xs font-medium text-accent-ink hover:underline">View bulk orders</Link>
         </Card>
         <Card className="p-5">
           <p className="text-sm text-ink-muted">Single (B2C) orders</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums">{s.b2c}</p>
-          <Link href="/admin/orders?channel=B2C" className="mt-1 inline-block text-xs font-medium text-ginger hover:underline">View single orders</Link>
+          <Link href="/admin/orders?channel=B2C" className="mt-1 inline-block text-xs font-medium text-accent-ink hover:underline">View single orders</Link>
         </Card>
       </section>
 
@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
             <li key={tile.label}>
               <Link
                 href={tile.href}
-                className={`block rounded-[var(--radius-md)] border p-4 transition-colors hover:border-ink ${tile.highlight ? "border-ginger bg-ginger-soft" : "border-line bg-surface"}`}
+                className={`block rounded-[var(--radius-md)] border p-4 transition-colors hover:border-ink ${tile.highlight ? "border-accent bg-accent-soft" : "border-line bg-surface"}`}
               >
                 <p className="text-2xl font-semibold tabular-nums">{tile.value}</p>
                 <p className="text-sm text-ink-muted">{tile.label}</p>
@@ -70,7 +70,7 @@ export default async function AdminDashboard() {
 
       {attention.length > 0 && (
         <section aria-labelledby="attention" className="rounded-[var(--radius-md)] border border-warning/30 bg-warning-soft p-4">
-          <h2 id="attention" className="flex items-center gap-2 font-semibold text-warning">
+          <h2 id="attention" className="flex items-center gap-2 font-semibold text-warning-ink">
             <AlertTriangle className="size-4" aria-hidden /> Needs attention ({s.attention})
           </h2>
           <ul className="mt-2 flex flex-col gap-1 text-sm">
@@ -89,7 +89,7 @@ export default async function AdminDashboard() {
       <section aria-labelledby="recent">
         <div className="mb-3 flex items-center justify-between">
           <h2 id="recent" className="font-semibold">Latest orders</h2>
-          <Link href="/admin/orders" className="flex items-center gap-1 text-sm font-medium text-ginger hover:underline">
+          <Link href="/admin/orders" className="flex items-center gap-1 text-sm font-medium text-accent-ink hover:underline">
             All orders <ArrowRight className="size-4" aria-hidden />
           </Link>
         </div>

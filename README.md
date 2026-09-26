@@ -38,6 +38,14 @@ Good for showing the product; **not for real orders** — demo data lives on the
 resets whenever Vercel restarts the server (e.g. after inactivity or a redeploy), and a design being edited
 at that moment is kept only in the visitor's browser.
 
+### Turning on AI design generation
+
+In Vercel → Project → Settings → Environment Variables, add **`OPENAI_API_KEY`** (and optionally
+`GEMINI_API_KEY` as a fallback), then redeploy. That's all — the "✨ Generate with AI" button in the studio
+starts creating artwork. Keys stay on the server. Each browser can make 10 AI designs per 24 hours by default
+(`AI_MAX_GENERATIONS_PER_SESSION`). See [docs/AI_DESIGN_GENERATION.md](docs/AI_DESIGN_GENERATION.md) for models,
+costs and all options. On Vercel's Hobby plan functions may run up to 300 s, enough for image generation.
+
 ### Option B — real data (Supabase)
 
 For durable data, connect a real database and file storage; setting `DATABASE_URL` switches demo mode off, and the

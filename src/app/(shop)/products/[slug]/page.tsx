@@ -94,7 +94,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
                   title={c.name}
                   className={cn(
                     "grid size-10 place-items-center rounded-full border border-line-strong",
-                    c.id === colour.id && "ring-2 ring-ginger ring-offset-2 ring-offset-canvas",
+                    c.id === colour.id && "ring-2 ring-accent ring-offset-2 ring-offset-canvas",
                   )}
                   style={{ backgroundColor: c.hex }}
                 >

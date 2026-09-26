@@ -53,7 +53,7 @@ export async function launchPayment(input: {
     name: "Sweet Ginger",
     description: `Order ${input.orderNumber}`,
     prefill: input.prefill,
-    theme: { color: "#B8521A" },
+    theme: { color: "#172554" }, // --color-navy
     handler: async (r: RazorpayResponse) => {
       try {
         await apiFetch("/api/payments/verify", {

@@ -1,7 +1,8 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
 import * as React from "react";
+import { isLightColour } from "@/domain/colour";
 import { cn } from "@/lib/cn";
 
 /** Segmented control (radio group semantics). */
@@ -115,7 +116,7 @@ export function Stepper({
         onBlur={(e) => commit(e.target.value || String(min))}
         onFocus={(e) => e.target.select()}
         className={cn(
-          "w-12 border-x border-line bg-transparent text-center font-medium tabular-nums outline-none [appearance:textfield] focus-visible:bg-ginger-soft [&::-webkit-inner-spin-button]:appearance-none",
+          "w-12 border-x border-line bg-transparent text-center font-medium tabular-nums outline-none [appearance:textfield] focus-visible:bg-surface-muted [&::-webkit-inner-spin-button]:appearance-none",
           size === "sm" ? "h-8 text-sm" : "h-10",
         )}
       />
@@ -126,20 +127,23 @@ export function Stepper({
   );
 }
 
-/** Colour swatch radio. */
+/** Colour swatch radio: ring + check when selected, inner border for light colours, optional visible name. */
 export function Swatch({
   hex,
   name,
   selected,
   onSelect,
   size = 36,
+  showLabel = false,
 }: {
   hex: string;
   name: string;
   selected: boolean;
   onSelect: () => void;
   size?: number;
+  showLabel?: boolean;
 }) {
+  const light = isLightColour(hex);
   return (
     <button
       type="button"
@@ -148,11 +152,21 @@ export function Swatch({
       aria-label={name}
       title={name}
       onClick={onSelect}
-      className={cn(
-        "shrink-0 rounded-full border border-black/15 transition-shadow",
-        selected ? "ring-2 ring-ginger ring-offset-2 ring-offset-surface" : "hover:ring-2 hover:ring-line-strong hover:ring-offset-1",
+      className={cn("group flex shrink-0 flex-col items-center gap-1.5 rounded-[var(--radius-sm)] outline-offset-4", showLabel && "w-16")}
+    >
+      <span
+        className={cn(
+          "grid place-items-center rounded-full border transition-[box-shadow,transform] duration-150",
+          light ? "border-black/20" : "border-black/10",
+          selected ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : "group-hover:scale-105 group-hover:ring-2 group-hover:ring-line-strong group-hover:ring-offset-2 group-hover:ring-offset-surface",
+        )}
+        style={{ backgroundColor: hex, width: size, height: size }}
+      >
+        {selected && <Check className={cn("size-4", light ? "text-ink" : "text-white")} strokeWidth={3} aria-hidden />}
+      </span>
+      {showLabel && (
+        <span className={cn("max-w-full truncate text-[0.7rem] leading-tight", selected ? "font-semibold text-ink" : "text-ink-muted")}>{name}</span>
       )}
-      style={{ backgroundColor: hex, width: size, height: size }}
-    />
+    </button>
   );
 }

@@ -33,7 +33,7 @@ export function LayersPanel({ onSelect }: { onSelect?: () => void }) {
         const active = el.id === selectedId;
         const label = el.type === "text" ? el.text.replace(/\n/g, " ") : assets[el.assetId]?.originalFilename ?? "Image";
         return (
-          <li key={el.id} className={cn("flex items-center gap-1 rounded-[var(--radius-sm)] border", active ? "border-ginger bg-ginger-soft" : "border-transparent hover:bg-surface-muted")}>
+          <li key={el.id} className={cn("flex items-center gap-1 rounded-[var(--radius-sm)] border", active ? "border-ink bg-surface-muted" : "border-transparent hover:bg-surface-muted")}>
             <button
               type="button"
               aria-pressed={active}

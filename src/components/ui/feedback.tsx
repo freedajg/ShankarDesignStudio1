@@ -8,9 +8,9 @@ const toneClass: Record<Tone, string> = {
   neutral: "bg-surface-muted text-ink-muted border-line",
   info: "bg-info-soft text-info border-info/20",
   success: "bg-success-soft text-success border-success/20",
-  warning: "bg-warning-soft text-warning border-warning/20",
+  warning: "bg-warning-soft text-warning-ink border-warning/30",
   danger: "bg-danger-soft text-danger border-danger/20",
-  accent: "bg-ginger-soft text-ginger-strong border-ginger/20",
+  accent: "bg-accent-soft text-accent-ink border-accent/30",
 };
 
 export function Badge({ tone = "neutral", className, ...props }: React.ComponentProps<"span"> & { tone?: Tone }) {

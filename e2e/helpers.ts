@@ -9,7 +9,7 @@ export async function openStudio(page: Page, path: string) {
 
 export async function addText(page: Page, side: "front" | "back", text: string) {
   await page.getByLabel(`Add text to the ${side}`).fill(text);
-  await page.getByRole("button", { name: "Add text" }).click();
+  await page.getByRole("button", { name: "Add text", exact: true }).click();
   await expect(page.getByTestId("text-inspector")).toBeVisible();
 }
 

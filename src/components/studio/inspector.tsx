@@ -34,7 +34,8 @@ import { areaFor, selectedElement } from "./store";
 const PRINT_COLOURS = [
   ["White", "#FFFFFF"],
   ["Black", "#1C1A17"],
-  ["Ginger", "#B8521A"],
+  ["Coral", "#F97360"],
+  ["Rust", "#B8521A"],
   ["Red", "#C62828"],
   ["Gold", "#E0A526"],
   ["Yellow", "#F4D03F"],
@@ -108,7 +109,7 @@ function RangeWithValue({
         aria-valuetext={format(value)}
         aria-label={label}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 flex-1 cursor-pointer accent-[var(--color-ginger)]"
+        className="h-2 flex-1 cursor-pointer accent-[var(--color-accent-ink)]"
       />
       <span className="w-16 text-right text-sm tabular-nums">{format(value)}</span>
     </div>
@@ -215,7 +216,7 @@ function TextInspector({ el, textAreaRef }: { el: TextElement; textAreaRef?: Rea
               onClick={() => update(el.id, { fontId: f.id })}
               className={cn(
                 "truncate rounded-[var(--radius-sm)] border px-2.5 py-2 text-left text-[0.95rem] transition-colors",
-                f.id === el.fontId ? "border-ginger bg-ginger-soft" : "border-line hover:border-ink",
+                f.id === el.fontId ? "border-ink bg-surface-muted shadow-[inset_0_0_0_1px_var(--color-ink)]" : "border-line hover:border-ink",
               )}
               style={{ fontFamily: fontsReady ? `${f.family}, sans-serif` : undefined }}
             >
@@ -248,7 +249,7 @@ function TextInspector({ el, textAreaRef }: { el: TextElement; textAreaRef?: Rea
               aria-label={name}
               title={name}
               onClick={() => update(el.id, { fill: hex })}
-              className={cn("size-8 rounded-full border border-black/15", el.fill.toUpperCase() === hex && "ring-2 ring-ginger ring-offset-2")}
+              className={cn("size-8 rounded-full border border-black/15", el.fill.toUpperCase() === hex && "ring-2 ring-accent ring-offset-2")}
               style={{ backgroundColor: hex }}
             />
           ))}

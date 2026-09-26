@@ -16,6 +16,7 @@ import type { OrderTotals as Totals } from "@/domain/pricing";
 import { requirePermissionPage } from "@/server/auth/session";
 import { requestDb } from "@/server/db/request-db";
 import * as t from "@/server/db/schema";
+import { aiOriginOf } from "@/server/services/ai-generation";
 import { loadSettings } from "@/server/services/catalogue";
 import { orderDetail } from "@/server/services/orders";
 import { toDataUrl, versionPreview } from "@/server/render/design";
@@ -46,8 +47,9 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
       const previews = await Promise.all(sides.map(async (side) => ({ side, src: toDataUrl(await versionPreview(db, { versionId: version.id, product, doc, side, width: 520 })) })));
       const assetIds = sides.flatMap((s) => doc.surfaces[s].elements.flatMap((e) => (e.type === "image" ? [e.assetId] : [])));
       const assets = assetIds.length ? await db.select().from(t.artworkAssets).where(inArray(t.artworkAssets.id, assetIds)) : [];
+      const aiOrigin = await aiOriginOf(db, assets.filter((a) => a.source === "AI").map((a) => a.id));
       const notes = await productionNotes(db, item);
-      return { item, index, doc, product, version, sides, previews, assets, notes, adapter: adapterFor(item.printMethodCode) };
+      return { item, index, doc, product, version, sides, previews, assets, aiOrigin, notes, adapter: adapterFor(item.printMethodCode) };
     }),
   );
   const options = allowedNext(order.status, user);
@@ -80,7 +82,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="flex flex-col gap-6">
-          {items.map(({ item, index, doc, product, previews, assets, notes, adapter }) => {
+          {items.map(({ item, index, doc, product, previews, assets, aiOrigin, notes, adapter }) => {
             const base = fileBase(order.orderNumber, index, detail.items.length);
             return (
               <Card key={item.id} className="overflow-hidden" data-testid="admin-order-item">
@@ -117,13 +119,13 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                               <li key={el.id} className="rounded bg-surface-muted px-2 py-1">
                                 {el.type === "text"
                                   ? `Text “${el.text.replace(/\n/g, " / ")}” · ${getFont(el.fontId).label}${el.bold ? " bold" : ""}${el.italic ? " italic" : ""} · ${el.fontSize} mm · ${el.fill}`
-                                  : `Image ${assets.find((a) => a.id === el.assetId)?.originalFilename ?? ""} · ${el.width} × ${el.height} mm`}{" "}
+                                  : `${assets.find((a) => a.id === el.assetId)?.source === "AI" ? "AI-generated image" : "Image"} ${assets.find((a) => a.id === el.assetId)?.originalFilename ?? ""} · ${el.width} × ${el.height} mm`}{" "}
                                 · at ({el.x}, {el.y}) mm · {el.rotation}°
                               </li>
                             ))}
                           </ul>
                           {(notes[p.side] ?? []).map((n, i) => (
-                            <p key={i} className={`mt-2 flex items-start gap-1 text-xs ${n.level === "warning" ? "font-medium text-warning" : "text-ink-muted"}`}>
+                            <p key={i} className={`mt-2 flex items-start gap-1 text-xs ${n.level === "warning" ? "font-medium text-warning-ink" : "text-ink-muted"}`}>
                               {n.level === "warning" && <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />} {n.message}
                             </p>
                           ))}
@@ -172,6 +174,11 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                         <a href={dl(`kind=original&asset=${a.id}`)} className={buttonVariants({ variant: "secondary", size: "sm" })} title={w.map((x) => x.message).join(" ")}>
                           <ImageIcon aria-hidden /> Original: {a.originalFilename ?? "artwork"}
                         </a>
+                        {a.source === "AI" && (
+                          <Badge tone="accent" title={aiOrigin.get(a.id) ? `Prompt: ${aiOrigin.get(a.id)!.prompt}` : undefined}>
+                            AI-generated
+                          </Badge>
+                        )}
                         <a href={dl(`kind=processed&asset=${a.id}`)} className={buttonVariants({ variant: "ghost", size: "sm" })}>
                           Processed PNG
                         </a>
@@ -193,8 +200,8 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
           <Card className="p-4 text-sm">
             <h2 className="mb-2 font-semibold">Customer</h2>
             <p>{order.contactName}</p>
-            <p><a className="text-ginger hover:underline" href={`mailto:${order.contactEmail}`}>{order.contactEmail}</a></p>
-            <p><a className="text-ginger hover:underline" href={`tel:${order.contactPhone}`}>{order.contactPhone}</a></p>
+            <p><a className="text-accent-ink hover:underline" href={`mailto:${order.contactEmail}`}>{order.contactEmail}</a></p>
+            <p><a className="text-accent-ink hover:underline" href={`tel:${order.contactPhone}`}>{order.contactPhone}</a></p>
             {order.companyName && (
               <div className="mt-3 border-t border-line pt-3">
                 <p className="font-medium">{order.companyName}</p>

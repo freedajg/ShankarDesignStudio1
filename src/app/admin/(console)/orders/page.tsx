@@ -120,7 +120,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ord
               {rows.map((o) => (
                 <tr key={o.id} className="border-t border-line hover:bg-surface-muted/60">
                   <td className="px-3 py-2.5 font-medium">
-                    <Link href={`/admin/orders/${o.orderNumber}`} className="inline-flex items-center gap-1 text-ink hover:text-ginger">
+                    <Link href={`/admin/orders/${o.orderNumber}`} className="inline-flex items-center gap-1 text-ink hover:text-accent-ink">
                       {o.orderNumber}
                       {o.needsAttention && <AlertTriangle className="size-3.5 text-warning" aria-label="Needs attention" />}
                     </Link>

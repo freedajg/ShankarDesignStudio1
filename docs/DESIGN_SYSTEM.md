@@ -1,23 +1,27 @@
 # Design System
 
-Direction: **premium, calm, apparel-first.** The garment is the hero; chrome stays quiet. Warm neutrals rather than SaaS blue, one ginger accent, generous touch targets, no decorative gradients or gratuitous motion. Tokens live in `src/app/globals.css` (`@theme`), components in `src/components/ui`.
+Direction: **premium, calm, apparel-first.** The garment is the hero; chrome stays quiet. Ink and warm-white neutrals, a deep navy for trust, and **coral + gold used selectively** (the main CTA, AI features, small highlights) — the app must never read as "orange". Generous touch targets, no gratuitous motion. Tokens live in `src/app/globals.css` (`@theme`) — never scatter raw hex values in components; components in `src/components/ui`.
 
 ## Colour tokens
 
-| Token | Light | Use |
+| Token | Value | Use |
 |---|---|---|
-| `--color-canvas` | `#FAF8F5` | app background (warm paper) |
+| `--color-ink` | `#111827` | primary text, primary buttons, selected states |
+| `--color-navy` | `#172554` | brand mark, info, payment sheet |
+| `--color-canvas` | `#FAFAF7` | app background (warm white) |
 | `--color-surface` | `#FFFFFF` | cards, panels, sheets |
-| `--color-surface-muted` | `#F2EEE8` | studio stage, inputs, table stripes |
-| `--color-ink` | `#1C1A17` | primary text, primary button |
-| `--color-ink-muted` | `#5E5850` | secondary text (≥ 4.5:1 on canvas) |
-| `--color-line` | `#E4DED5` | borders, dividers |
-| `--color-ginger` | `#B8521A` | accent: focus ring, active tool, links (4.9:1 on white) |
-| `--color-ginger-soft` | `#F6E6DA` | accent backgrounds, selected chips |
-| `--color-success` | `#2F6B3F` | saved, paid |
-| `--color-warning` | `#8A5A00` on `#FFF4DB` | artwork warnings |
-| `--color-danger` | `#A3261C` on `#FCE9E7` | errors, cancel |
-| `--color-info` | `#24527A` on `#E6F0F8` | dev-mode notices |
+| `--color-surface-muted` | `#F3F4F0` | studio stage, selected chips, inputs |
+| `--color-ink-muted` | `#4B5563` | secondary text |
+| `--color-line` / `-strong` | `#E5E6E0` / `#CDD0C6` | borders |
+| `--color-accent` | `#F97360` | coral: main CTA fill (ink text, 6.9:1), AI sparkle, canvas selection |
+| `--color-accent-ink` | `#C2412D` | coral text/links on white (≥ 4.5:1), focus ring |
+| `--color-accent-soft` | `#FEEDE9` | accent badges |
+| `--color-gold` | `#D9A441` | AI gradient edge, highlights |
+| `--color-success` | `#15803D` | saved, paid |
+| `--color-warning` / `-ink` | `#D97706` / `#92400E` | warning icons / warning text |
+| `--color-danger` | `#DC2626` | errors |
+
+Selected states use **ink** (ring or inset border + muted fill), not coral. The AI button uses the `ai-edge` utility (thin coral→gold border, static sparkle, no looping animation).
 
 Status badges map every order status to one of these tones (neutral → info → success → danger), never colour alone — the label is always present.
 
@@ -34,9 +38,9 @@ Status badges map every order status to one of these tones (neutral → info →
 ## Components
 | Component | Rules |
 |---|---|
-| Button | variants `primary` (ink), `accent` (ginger — the one main CTA per view, e.g. Add to cart / Pay), `secondary` (outline), `ghost`, `danger`; sizes `sm 36px`, `md 44px`, `lg 52px`. Mobile targets ≥ 44 px. Loading state keeps width and shows a spinner + label. |
+| Button | variants `primary` (ink), `accent` (coral with ink text — the one main CTA per view, e.g. Add to cart / Pay), `secondary` (outline), `ghost`, `danger`; sizes `sm 36px`, `md 44px`, `lg 52px`. Mobile targets ≥ 44 px. Loading state keeps width and shows a spinner + label. |
 | Input / Select / Textarea | 44 px height, visible label always (no placeholder-as-label), error text below linked by `aria-describedby`. |
-| Swatch | 40 px circle, ring on selected, name in tooltip + accessible label, check icon when selected; light colours get an inner border. |
+| Swatch | 36 px circle with its colour name below, ink ring + check icon when selected, hover lift, inner border for light colours; colours come from the database. |
 | Stepper | − / number / + ; number is a real `input type=number`; min/max enforced; used for size breakdown. |
 | Card | surface + 1 px line + md radius. |
 | Dialog / Sheet | Radix; focus trapped, Esc closes, returns focus. Bottom sheet on mobile, side sheet on desktop. |
@@ -57,4 +61,4 @@ Status badges map every order status to one of these tones (neutral → info →
 150–200 ms ease-out for sheets/popovers; no animation on canvas objects; respects `prefers-reduced-motion`.
 
 ## Accessibility checklist
-Semantic landmarks; one `h1` per page; focus ring 2 px ginger with offset; all icon buttons labelled; colour never the only signal; forms with labels, `autocomplete`, and error summaries; canvas mirrored by the Layers panel (select, move with arrow keys, rotate, resize, delete, reorder — all keyboard operable).
+Semantic landmarks; one `h1` per page; focus ring 2 px accent-ink with offset; all icon buttons labelled; colour never the only signal; forms with labels, `autocomplete`, and error summaries; canvas mirrored by the Layers panel (select, move with arrow keys, rotate, resize, delete, reorder — all keyboard operable).

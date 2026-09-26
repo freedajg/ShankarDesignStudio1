@@ -34,7 +34,10 @@ const cleanName = (name: string | null) => (name ? name.replace(/[^\w.\- ()]+/g,
  */
 export async function processUpload(
   db: Db,
-  input: { data: Buffer; filename: string | null; ownerTokenHash: string; rules: Settings["artwork"] },
+  input: { data: Buffer; filename: string | null; ownerTokenHash: string; rules: Settings["artwork"]; source?: "UPLOAD" | "AI";
+    /** optional clean-up of the PROCESSED image (e.g. lifting a flat AI background); the ORIGINAL stays untouched */
+    transform?: (png: Buffer) => Promise<Buffer | null>;
+  },
 ): Promise<UploadedAsset> {
   const { data, rules } = input;
   if (data.length === 0) throw new AppError("VALIDATION", "That file is empty.");
@@ -58,6 +61,8 @@ export async function processUpload(
   let alphaUsed = false;
   try {
     processed = await sharp(data, opts).rotate().png({ compressionLevel: 6 }).toBuffer({ resolveWithObject: true });
+    const transformed = input.transform ? await input.transform(processed.data) : null;
+    if (transformed) processed = await sharp(transformed, opts).png({ compressionLevel: 6 }).toBuffer({ resolveWithObject: true });
     if (processed.info.channels === 4) {
       const stats = await sharp(processed.data).stats();
       alphaUsed = (stats.channels[3]?.min ?? 255) < 250;
@@ -86,6 +91,7 @@ export async function processUpload(
   await s.put(BUCKETS.processed, previewKey, preview, "image/webp");
 
   const filename = cleanName(input.filename);
+  const source = input.source ?? "UPLOAD";
   await db.transaction(async (tx) => {
     await tx.insert(artworkAssets).values({
       id: originalId,
@@ -100,6 +106,7 @@ export async function processUpload(
       hasAlpha: !!meta.hasAlpha,
       sha256: sha256Hex(data),
       originalFilename: filename,
+      source,
     });
     await tx.insert(artworkAssets).values({
       id: processedId,
@@ -116,6 +123,7 @@ export async function processUpload(
       hasAlpha: alphaUsed,
       sha256: sha256Hex(processed.data),
       originalFilename: filename,
+      source,
     });
   });
 
@@ -156,5 +164,6 @@ export function toClientAsset(row: typeof artworkAssets.$inferSelect) {
     hasAlpha: row.hasAlpha,
     mime: row.mime,
     originalFilename: row.originalFilename,
+    source: row.source,
   };
 }

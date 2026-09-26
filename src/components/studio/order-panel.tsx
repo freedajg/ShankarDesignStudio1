@@ -85,7 +85,7 @@ export function SizePicker() {
           <span className="text-sm font-medium">Quantity</span>
           <Stepper label="Quantity" value={qty} min={1} onChange={(n) => selected && setQuantity(selected, n)} disabled={!selected} />
         </div>
-        <button type="button" className="self-start text-sm font-medium text-ginger hover:underline" onClick={() => setMulti(true)}>
+        <button type="button" className="self-start text-sm font-medium text-accent-ink hover:underline" onClick={() => setMulti(true)}>
           Order several sizes
         </button>
       </div>
@@ -99,7 +99,7 @@ export function SizePicker() {
         {channel === "B2C" && (
           <button
             type="button"
-            className="text-sm font-medium text-ginger hover:underline"
+            className="text-sm font-medium text-accent-ink hover:underline"
             onClick={() => {
               const first = Object.entries(quantities)[0];
               setQuantities(first ? { [first[0]]: first[1] } : {});

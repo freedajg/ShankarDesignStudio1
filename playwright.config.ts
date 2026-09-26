@@ -12,6 +12,11 @@ const env = {
   PAYMENT_PROVIDER: "dev",
   ALLOW_DEV_PAYMENTS: "true",
   APP_URL: `http://localhost:${PORT}`,
+  // AI: the local test provider (draws deterministic artwork, no network/API cost)
+  AI_IMAGE_PROVIDER: "fixture",
+  AI_ALLOW_FIXTURE: "true",
+  AI_FIXTURE_DELAY_MS: "1200",
+  AI_MAX_GENERATIONS_PER_SESSION: "10",
 };
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH ?? (process.env.PLAYWRIGHT_BROWSERS_PATH ? "/opt/pw-browsers/chromium" : undefined);
 

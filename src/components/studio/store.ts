@@ -70,6 +70,8 @@ type Actions = {
   setQuantities(q: Record<string, number>): void;
   addText(text?: string): string | null;
   addImage(asset: AssetInfo): string | null;
+  /** AI artwork plus the words the customer asked for as editable text, laid out together (one undo step). */
+  addArtworkWithText(asset: AssetInfo, texts: string[]): string | null;
   updateElement(id: string, patch: Partial<DesignElement>, opts?: { coalesce?: string; history?: boolean }): void;
   removeElement(id: string): void;
   duplicateElement(id: string): void;
@@ -235,7 +237,7 @@ export const createStudioStore = (init: StudioInit) =>
           text,
           fontId: DEFAULT_FONT_ID,
           fontSize: round2(Math.min(40, area.widthMm * 0.13)),
-          fill: isLightColour(hex) ? "#1C1A17" : "#FFFFFF",
+          fill: isLightColour(hex) ? "#111827" : "#FFFFFF",
           bold: true,
           italic: false,
           align: "center",
@@ -273,6 +275,59 @@ export const createStudioStore = (init: StudioInit) =>
         set({ assets: { ...s.assets, [asset.id]: asset } });
         commitSurfaces(withSurface(s.side, (els) => [...els, el]), { selectedId: el.id });
         return el.id;
+      },
+
+      addArtworkWithText: (asset, texts) => {
+        const s = get();
+        const surface = s.doc.surfaces[s.side];
+        const words = texts.map((t) => t.trim()).filter(Boolean).slice(0, 3);
+        if (!words.length || surface.elements.length + 1 + words.length > MAX_ELEMENTS_PER_SURFACE) return get().addImage(asset);
+        const area = areaFor(s.product, s.side, surface.printAreaCode);
+        const hex = s.product.colours.find((c) => c.id === s.doc.colourId)?.hex ?? "#FFFFFF";
+        const sizes = words.map((w) => round2(Math.max(4, Math.min(40, area.widthMm * 0.13, (area.widthMm * 0.9) / (w.length * 0.62)))));
+        const textBlock = sizes.reduce((sum, f) => sum + f * 1.3, 0);
+        const aspect = asset.heightPx / asset.widthPx;
+        const maxImgH = Math.max(area.heightMm * 0.3, area.heightMm * 0.9 - textBlock - area.heightMm * 0.04);
+        let width = area.widthMm * 0.8;
+        let height = width * aspect;
+        if (height > maxImgH) {
+          height = maxImgH;
+          width = height / aspect;
+        }
+        const top = Math.max(0, (area.heightMm - (height + area.heightMm * 0.04 + textBlock)) / 2);
+        const image: ImageElement = {
+          id: newId(),
+          type: "image",
+          assetId: asset.id,
+          width: round2(width),
+          height: round2(height),
+          x: round2(area.widthMm / 2),
+          y: round2(top + height / 2),
+          rotation: 0,
+        };
+        let y = top + height + area.heightMm * 0.04;
+        const textEls: TextElement[] = words.map((text, i) => {
+          const el: TextElement = {
+            id: newId(),
+            type: "text",
+            text,
+            fontId: DEFAULT_FONT_ID,
+            fontSize: sizes[i],
+            fill: isLightColour(hex) ? "#111827" : "#FFFFFF",
+            bold: true,
+            italic: false,
+            align: "center",
+            lineHeight: 1.15,
+            x: round2(area.widthMm / 2),
+            y: round2(Math.min(area.heightMm - sizes[i] * 0.6, y + (sizes[i] * 1.3) / 2)),
+            rotation: 0,
+          };
+          y += sizes[i] * 1.3;
+          return el;
+        });
+        set({ assets: { ...s.assets, [asset.id]: asset } });
+        commitSurfaces(withSurface(s.side, (els) => [...els, image, ...textEls]), { selectedId: image.id });
+        return image.id;
       },
 
       updateElement: (id, patch, opts = {}) => {

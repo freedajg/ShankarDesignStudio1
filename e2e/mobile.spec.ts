@@ -36,3 +36,19 @@ test("mobile: design with bottom sheets, then order and pay", async ({ page }) =
   await placeAndPay(page);
   await expect(page.getByText("Thank you — your order is confirmed.")).toBeVisible();
 });
+
+test("mobile: generate artwork with AI from the start card", async ({ page }) => {
+  await page.goto("/studio/classic-crew-tshirt");
+  await expect(page.getByTestId("design-stage")).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
+  await page.getByTestId("design-start-mobile").getByTestId("ai-open").click();
+  const dialog = page.getByTestId("ai-dialog");
+  await expect(dialog.getByRole("heading", { name: "Create your design with AI" })).toBeVisible();
+  // full-screen on phones
+  const box = (await dialog.boundingBox())!;
+  expect(box.width).toBeGreaterThanOrEqual(page.viewportSize()!.width - 1);
+  await dialog.getByRole("button", { name: "Astronaut cat" }).click();
+  await dialog.getByTestId("ai-generate").click();
+  await expect(dialog.getByTestId("ai-variation").first()).toBeVisible({ timeout: 60_000 });
+  await dialog.getByTestId("ai-variation").first().getByRole("button", { name: "Use this design" }).click();
+  await expect(page.getByRole("dialog", { name: "Edit image" })).toBeVisible();
+});

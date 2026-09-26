@@ -15,6 +15,7 @@ import {
   Save,
   Shirt,
   ShoppingBag,
+  Sparkles,
   Type,
   Undo2,
 } from "lucide-react";
@@ -28,6 +29,9 @@ import type { Side } from "@/domain/design/schema";
 import { cn } from "@/lib/cn";
 import { useStudioActions } from "./actions";
 import { AddTextPanel, UploadPanel } from "./add-panels";
+import { AiButton, AiGenerator } from "./ai/ai-generator";
+import { useAiGenerator } from "./ai/use-ai-generator";
+import { DesignStart } from "./design-start";
 import { StudioProvider, useStudio, useStudioApi } from "./context";
 import { Inspector } from "./inspector";
 import { LayersPanel } from "./layers-panel";
@@ -70,7 +74,7 @@ export function Studio(props: { init: StudioInit; recoverLocal: boolean }) {
 
 // ------------------------------------------------------------------ shell
 
-type MobileTab = "product" | "text" | "upload" | "layers" | "order" | null;
+type MobileTab = "product" | "text" | "upload" | "ai" | "layers" | "order" | null;
 
 function StudioShell() {
   const api = useStudioApi();
@@ -81,6 +85,25 @@ function StudioShell() {
   const [tab, setTab] = useState<MobileTab>(null);
   const [rightTab, setRightTab] = useState<"design" | "order">("design");
   const textRef = useRef<HTMLTextAreaElement>(null);
+  const addTextRef = useRef<HTMLInputElement>(null);
+  const sideEmpty = useStudio((s) => s.doc.surfaces[s.side].elements.length === 0);
+  const ai = useAiGenerator();
+  const [aiOpen, setAiOpenState] = useState(false);
+  const setAiOpen = (open: boolean) => {
+    ai.setOpen(open);
+    if (open) ai.ensureLoaded();
+    setAiOpenState(open);
+  };
+  const openAi = () => {
+    setTab(null);
+    setAiOpen(true);
+  };
+  const startText = () => {
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      setRightTab("design");
+      setTimeout(() => addTextRef.current?.focus(), 50);
+    } else setTab("text");
+  };
 
   useKeyboardShortcuts();
 
@@ -114,7 +137,7 @@ function StudioShell() {
         <main className="relative flex min-w-0 flex-1 flex-col" aria-label="Design canvas">
           <StageToolbar />
           <Stage className="relative min-h-0 flex-1 touch-none select-none bg-surface-muted" onEditText={editText} />
-          <StageHint />
+          <StageHint onAi={openAi} onAddText={startText} />
         </main>
 
         {/* right rail (desktop) */}
@@ -134,7 +157,8 @@ function StudioShell() {
           <div className="min-h-0 flex-1 overflow-y-auto p-5">
             {rightTab === "design" ? (
               <div className="flex flex-col gap-6">
-                <AddTextPanel />
+                {sideEmpty ? <DesignStart onAddText={startText} onAi={openAi} /> : <AiButton onClick={openAi} className="w-full" />}
+                <AddTextPanel inputRef={addTextRef} />
                 <UploadPanel />
                 <div className="border-t border-line pt-5">
                   {selected ? (
@@ -152,7 +176,8 @@ function StudioShell() {
       </div>
 
       <OrderBar onAddToCart={actions.addToCart} busy={actions.busy === "cart"} onEditSizes={() => (window.matchMedia("(min-width: 1024px)").matches ? setRightTab("order") : setTab("order"))} />
-      <MobileTabBar tab={tab} setTab={setTab} />
+      <MobileTabBar tab={tab} setTab={(t) => (t === "ai" ? openAi() : setTab(t))} />
+      <AiGenerator ai={ai} open={aiOpen} onOpenChange={setAiOpen} />
 
       {/* mobile sheets */}
       <Sheet open={tab === "product"} onOpenChange={(o) => setTab(o ? "product" : null)} title="Shirt">
@@ -280,19 +305,30 @@ function StageToolbar() {
 }
 
 const CountDot = ({ n }: { n: number }) => (
-  <span className="grid min-w-5 place-items-center rounded-full bg-ginger px-1 text-[0.7rem] font-semibold text-white" aria-label={`${n} items`}>
+  <span className="grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[0.7rem] font-semibold text-white" aria-label={`${n} items`}>
     {n}
   </span>
 );
 
-function StageHint() {
+function StageHint({ onAi, onAddText }: { onAi: () => void; onAddText: () => void }) {
   const side = useStudio((s) => s.side);
   const empty = useStudio((s) => s.doc.surfaces[s.side].elements.length === 0);
-  if (!empty) return null;
+  const selected = useStudio((s) => s.selectedId !== null);
+  if (!empty || selected) return null;
   return (
-    <p className="pointer-events-none absolute inset-x-0 bottom-4 text-center text-sm text-ink-muted">
-      Add text or upload artwork to design the {side}.
-    </p>
+    <>
+      {/* mobile: the start card floats over the bottom of the stage */}
+      <div className="absolute inset-x-3 bottom-3 lg:hidden">
+        <DesignStart compact onAddText={onAddText} onAi={onAi} />
+      </div>
+      {/* desktop: a quiet hint, with an AI shortcut */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-5 hidden flex-col items-center gap-2 lg:flex">
+        <p className="sr-only">Add text or upload artwork to design the {side}.</p>
+        <AiButton onClick={onAi} size="sm" className="pointer-events-auto">
+          Or start with an AI-generated design
+        </AiButton>
+      </div>
+    </>
   );
 }
 
@@ -313,7 +349,7 @@ function OrderBar({ onAddToCart, busy, onEditSizes }: { onAddToCart: () => void;
         <button type="button" onClick={onEditSizes} className="min-w-0 flex-1 text-left" aria-label="Edit sizes and quantities">
           <p className="truncate text-sm font-medium">
             {quantity > 0 ? `${quantity} ${quantity === 1 ? "piece" : "pieces"}` : "Choose sizes"} · {channel === "B2B" ? "Bulk" : "Single"}
-            <span className="ml-1.5 text-ginger">Edit</span>
+            <span className="ml-1.5 text-accent-ink">Edit</span>
           </p>
           <p className="truncate text-xs text-ink-muted">{reason ?? (estimate ? "Estimate" : "Tax & shipping at checkout")}</p>
         </button>
@@ -340,20 +376,21 @@ function MobileTabBar({ tab, setTab }: { tab: MobileTab; setTab: (t: MobileTab) 
     { id: "product", label: "Shirt", icon: Shirt },
     { id: "text", label: "Text", icon: Type },
     { id: "upload", label: "Upload", icon: ImagePlus },
+    { id: "ai", label: "AI", icon: Sparkles },
     { id: "layers", label: "Layers", icon: Layers },
     { id: "order", label: "Sizes", icon: ShoppingBag },
   ];
   return (
-    <nav aria-label="Studio tools" className="grid shrink-0 grid-cols-5 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Studio tools" className="grid shrink-0 grid-cols-6 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
       {items.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
           type="button"
           aria-pressed={tab === id}
           onClick={() => setTab(tab === id ? null : id)}
-          className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[0.7rem] font-medium", tab === id ? "text-ginger" : "text-ink-muted")}
+          className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[0.7rem] font-medium", tab === id ? "text-ink" : "text-ink-muted")}
         >
-          <Icon className="size-5" aria-hidden />
+          <Icon className={cn("size-5", id === "ai" && "text-accent", tab === id && id !== "ai" && "text-accent-ink")} aria-hidden />
           {label}
         </button>
       ))}

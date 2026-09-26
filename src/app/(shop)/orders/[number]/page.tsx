@@ -59,7 +59,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             <CheckCircle2 className="size-5" aria-hidden /> Thank you — your order is confirmed.
           </p>
         ) : (
-          <p className="flex items-center gap-2 font-medium text-warning">
+          <p className="flex items-center gap-2 font-medium text-warning-ink">
             <Clock className="size-5" aria-hidden /> Payment not completed yet. Your design is saved with this order.
           </p>
         )}
@@ -87,7 +87,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         <ol className="mt-8 grid grid-cols-5 gap-2" aria-label="Order progress">
           {STEPS.map((s, i) => (
             <li key={s.label} className="flex flex-col gap-2">
-              <span className={`h-1.5 rounded-full ${i <= stepIndex ? "bg-ginger" : "bg-surface-sunken"}`} />
+              <span className={`h-1.5 rounded-full ${i <= stepIndex ? "bg-accent" : "bg-surface-sunken"}`} />
               <span className={`text-xs ${i <= stepIndex ? "font-medium text-ink" : "text-ink-muted"}`}>
                 {s.label}
                 {i === stepIndex && <span className="sr-only"> (current)</span>}

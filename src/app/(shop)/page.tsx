@@ -17,7 +17,7 @@ export default async function Home() {
     <main>
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-10 pt-10 md:grid-cols-[1.1fr_1fr] md:pt-16">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ginger">Printed in Jaipur</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-accent-ink">Printed in Jaipur</p>
           <h1 className="mt-3 text-4xl font-semibold sm:text-5xl">Custom T-shirts, designed by you.</h1>
           <p className="mt-4 max-w-xl text-lg text-ink-muted">
             Pick a shirt, add your text or logo, see exactly how it will look, and order one piece or a thousand. No
@@ -66,7 +66,7 @@ export default async function Home() {
                 </div>
                 <div className="mt-4 flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-semibold group-hover:text-ginger">{p.name}</h3>
+                    <h3 className="font-semibold group-hover:text-accent-ink">{p.name}</h3>
                     <p className="text-sm text-ink-muted">
                       {p.categoryName} {p.gsm ? `· ${p.gsm} GSM` : ""}
                     </p>
@@ -98,7 +98,7 @@ export default async function Home() {
             { icon: Truck, title: "Print-ready from the start", body: "Your exact design, placement and sizes go straight to our print floor — nothing lost in translation." },
           ].map(({ icon: Icon, title, body }) => (
             <div key={title}>
-              <div className="grid size-10 place-items-center rounded-full bg-ginger-soft text-ginger">
+              <div className="grid size-10 place-items-center rounded-full bg-accent-soft text-accent-ink">
                 <Icon className="size-5" aria-hidden />
               </div>
               <h3 className="mt-4 font-semibold">{title}</h3>

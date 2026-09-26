@@ -1,6 +1,7 @@
 "use client";
 
 import { ImagePlus, Loader2, Type, UploadCloud } from "lucide-react";
+import type * as React from "react";
 import { useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/cn";
 import { useStudio, useStudioApi } from "./context";
 import type { AssetInfo } from "./store";
 
-export function AddTextPanel({ onAdded }: { onAdded?: () => void }) {
+export function AddTextPanel({ onAdded, inputRef }: { onAdded?: () => void; inputRef?: React.Ref<HTMLInputElement> }) {
   const addText = useStudio((s) => s.addText);
   const side = useStudio((s) => s.side);
   const [text, setText] = useState("");
@@ -36,7 +37,7 @@ export function AddTextPanel({ onAdded }: { onAdded?: () => void }) {
         Add text to the {side}
       </label>
       <div className="flex gap-2">
-        <Input id={inputId} value={text} maxLength={200} placeholder="Your text" onChange={(e) => setText(e.target.value)} />
+        <Input ref={inputRef} id={inputId} value={text} maxLength={200} placeholder="Your text" onChange={(e) => setText(e.target.value)} />
         <Button type="submit" variant="primary" aria-label="Add text">
           <Type aria-hidden /> Add
         </Button>
@@ -105,10 +106,10 @@ export function UploadPanel({ onAdded }: { onAdded?: () => void }) {
         }}
         className={cn(
           "flex flex-col items-center gap-2 rounded-[var(--radius-md)] border-2 border-dashed p-5 text-center transition-colors",
-          drag ? "border-ginger bg-ginger-soft" : "border-line-strong",
+          drag ? "border-accent bg-accent-soft" : "border-line-strong",
         )}
       >
-        {busy ? <Loader2 className="size-6 animate-spin text-ginger" aria-hidden /> : <UploadCloud className="size-6 text-ink-muted" aria-hidden />}
+        {busy ? <Loader2 className="size-6 animate-spin text-accent-ink" aria-hidden /> : <UploadCloud className="size-6 text-ink-muted" aria-hidden />}
         <p className="text-sm font-medium">{busy ? "Uploading and checking your image…" : `Upload artwork to the ${side}`}</p>
         <p className="text-xs text-ink-muted">PNG or JPG. Transparent PNGs print best.</p>
         <Button type="button" variant="secondary" size="sm" loading={busy} onClick={() => inputRef.current?.click()}>
@@ -138,7 +139,7 @@ export function UploadPanel({ onAdded }: { onAdded?: () => void }) {
                 <button
                   type="button"
                   onClick={() => addImage(a) && onAdded?.()}
-                  className="grid aspect-square w-full place-items-center rounded-[var(--radius-sm)] border border-line bg-[conic-gradient(#eee_25%,#fff_0_50%,#eee_0_75%,#fff_0)] bg-[length:12px_12px] p-1 hover:border-ginger"
+                  className="grid aspect-square w-full place-items-center rounded-[var(--radius-sm)] border border-line bg-[conic-gradient(#eee_25%,#fff_0_50%,#eee_0_75%,#fff_0)] bg-[length:12px_12px] p-1 hover:border-accent"
                   aria-label={`Add ${a.originalFilename ?? "uploaded image"} again`}
                   title={a.originalFilename ?? undefined}
                 >

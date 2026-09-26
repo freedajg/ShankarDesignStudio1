@@ -98,12 +98,12 @@ export default async function CartPage() {
                     </Alert>
                   )}
                   {l.priceChanged && !l.problem && (
-                    <p className="mt-2 flex items-center gap-1 text-xs text-warning">
+                    <p className="mt-2 flex items-center gap-1 text-xs text-warning-ink">
                       <AlertTriangle className="size-3.5" aria-hidden /> The price was updated since you added this item.
                     </p>
                   )}
                   <LineEditor itemId={l.id} sizes={l.sizes} allSizes={l.allSizes} />
-                  <Link href={`/studio/${l.productSlug}?design=${l.designId}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-ginger hover:underline">
+                  <Link href={`/studio/${l.productSlug}?design=${l.designId}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent-ink hover:underline">
                     <Pencil className="size-3.5" aria-hidden /> Edit design
                   </Link>
                   <p className="mt-1 text-xs text-ink-muted">Edits create a new version — add it to the cart again and remove this one.</p>

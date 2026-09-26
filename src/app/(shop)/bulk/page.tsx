@@ -24,7 +24,7 @@ export default async function BulkPage() {
   return (
     <main>
       <section className="mx-auto max-w-6xl px-4 py-10 md:py-16">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-ginger">Sweet Ginger Basics</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-accent-ink">Sweet Ginger Basics</p>
         <h1 className="mt-3 max-w-2xl text-4xl font-semibold">Bulk custom apparel for your team, event or brand</h1>
         <p className="mt-4 max-w-2xl text-lg text-ink-muted">
           Design once, set quantities for every size, and see your per-piece price drop as the order grows. Your logo,
@@ -37,7 +37,7 @@ export default async function BulkPage() {
             { icon: Building2, t: "Volume pricing", d: "Tiered discounts apply automatically across all sizes of a design." },
           ].map(({ icon: Icon, t, d }) => (
             <li key={t} className="rounded-[var(--radius-md)] border border-line bg-surface p-4">
-              <Icon className="size-5 text-ginger" aria-hidden />
+              <Icon className="size-5 text-accent-ink" aria-hidden />
               <p className="mt-3 font-semibold">{t}</p>
               <p className="mt-1 text-sm text-ink-muted">{d}</p>
             </li>

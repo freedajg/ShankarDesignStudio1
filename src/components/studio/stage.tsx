@@ -53,9 +53,9 @@ type Entry = { obj: FabricObject; sig: string; el: DesignElement };
 type ElementObject = FabricObject & { sgId?: string };
 
 const CONTROL_STYLE = {
-  borderColor: "#B8521A",
+  borderColor: "#F97360",
   cornerColor: "#FFFFFF",
-  cornerStrokeColor: "#B8521A",
+  cornerStrokeColor: "#F97360",
   cornerStyle: "circle" as const,
   transparentCorners: false,
   cornerSize: 12,
@@ -67,7 +67,7 @@ const CONTROL_STYLE = {
   lockSkewingY: true,
 };
 
-export const STAGE_BG = "#F2EEE8"; // --color-surface-muted
+export const STAGE_BG = "#F3F4F0"; // --color-surface-muted
 const MIN_FONT_MM = 3;
 const MIN_IMAGE_MM = 5;
 
@@ -99,7 +99,7 @@ export function Stage({ onEditText, className }: { onEditText?: () => void; clas
       controlsAboveOverlay: true,
       uniformScaling: true,
       selectionColor: "rgba(184,82,26,0.08)",
-      selectionBorderColor: "#B8521A",
+      selectionBorderColor: "#F97360",
       selection: false, // one element at a time keeps the inspector and layers unambiguous
       enableRetinaScaling: true,
       allowTouchScrolling: false,
