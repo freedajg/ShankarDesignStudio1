@@ -113,3 +113,17 @@ describe("rate limiter", () => {
     expect((await hit(db, "k", 2, 60)).count).toBe(1);
   });
 });
+
+describe("demo seed", () => {
+  it("gives catalogue rows the same ids in every database (serverless demo instances agree)", async () => {
+    const { createTestDb } = await import("../support/db");
+    const { loadProductConfig } = await import("@/server/services/catalogue");
+    const [a, b] = await Promise.all([createTestDb(), createTestDb()]);
+    const [pa, pb] = await Promise.all([loadProductConfig(a, { slug: "classic-crew-tshirt" }), loadProductConfig(b, { slug: "classic-crew-tshirt" })]);
+    expect(pa!.id).toBe(pb!.id);
+    expect(pa!.colours.map((c) => c.id)).toEqual(pb!.colours.map((c) => c.id));
+    expect(pa!.sizes.map((s) => s.id)).toEqual(pb!.sizes.map((s) => s.id));
+    expect(pa!.variants.map((v) => v.id).sort()).toEqual(pb!.variants.map((v) => v.id).sort());
+    expect(pa!.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  });
+});

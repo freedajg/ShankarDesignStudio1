@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import type { Db } from "./client";
 import * as t from "./schema";
@@ -107,6 +108,17 @@ const tierSeeds: { channel: "B2B" | "B2C"; minQty: number; discountBps: number }
   { channel: "B2C", minQty: 10, discountBps: 1000 },
 ];
 
+/**
+ * Deterministic UUID for a seeded row. Serverless demo deployments seed a
+ * separate embedded database per instance (and again after each restart); stable
+ * ids mean a page rendered by one instance and an API call served by another
+ * agree on which product / colour / size is meant.
+ */
+export function stableId(...parts: string[]) {
+  const h = createHash("sha256").update(`sg-seed:${parts.join(":")}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${((parseInt(h[16], 16) & 3) | 8).toString(16)}${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+
 export async function seedDemoData(db: Db) {
   await db.transaction(async (tx) => {
     // settings
@@ -116,12 +128,12 @@ export async function seedDemoData(db: Db) {
 
     // categories
     for (const [i, [slug, name]] of [["t-shirts", "T-Shirts"], ["polos", "Polos"]].entries()) {
-      await tx.insert(t.productCategories).values({ slug, name, sort: i }).onConflictDoNothing();
+      await tx.insert(t.productCategories).values({ id: stableId("category", slug), slug, name, sort: i }).onConflictDoNothing();
     }
     const categories = await tx.select().from(t.productCategories);
 
     // print methods + prices
-    for (const m of printMethodSeeds) await tx.insert(t.printMethods).values(m).onConflictDoNothing();
+    for (const m of printMethodSeeds) await tx.insert(t.printMethods).values({ id: stableId("method", m.code), ...m }).onConflictDoNothing();
     const methods = await tx.select().from(t.printMethods);
     for (const m of methods) {
       for (const [sizeClass, pricePaise] of Object.entries(printPriceSeeds[m.code] ?? {})) {
@@ -143,6 +155,7 @@ export async function seedDemoData(db: Db) {
       await tx
         .insert(t.products)
         .values({
+          id: stableId("product", p.slug),
           slug: p.slug,
           skuPrefix: p.skuPrefix,
           categoryId,
@@ -160,10 +173,10 @@ export async function seedDemoData(db: Db) {
       const [product] = await tx.select().from(t.products).where(eq(t.products.slug, p.slug));
 
       for (const [i, [name, hex]] of p.colours.entries()) {
-        await tx.insert(t.productColours).values({ productId: product.id, name, hex, sort: i }).onConflictDoNothing();
+        await tx.insert(t.productColours).values({ id: stableId("colour", p.slug, name), productId: product.id, name, hex, sort: i }).onConflictDoNothing();
       }
       for (const [i, code] of p.sizes.entries()) {
-        await tx.insert(t.productSizes).values({ productId: product.id, code, sort: i }).onConflictDoNothing();
+        await tx.insert(t.productSizes).values({ id: stableId("size", p.slug, code), productId: product.id, code, sort: i }).onConflictDoNothing();
       }
       const colours = await tx.select().from(t.productColours).where(eq(t.productColours.productId, product.id));
       const sizes = await tx.select().from(t.productSizes).where(eq(t.productSizes.productId, product.id));
@@ -173,6 +186,7 @@ export async function seedDemoData(db: Db) {
           await tx
             .insert(t.productVariants)
             .values({
+              id: stableId("variant", sku),
               productId: product.id,
               colourId: c.id,
               sizeId: s.id,
@@ -197,6 +211,7 @@ export async function seedDemoData(db: Db) {
         await tx
           .insert(t.productMockups)
           .values({
+            id: stableId("mockup", p.slug, side),
             productId: product.id,
             side,
             maskUrl: `/mockups/${p.style}-${side}-mask.png`,
@@ -211,6 +226,7 @@ export async function seedDemoData(db: Db) {
         await tx
           .insert(t.printAreas)
           .values({
+            id: stableId("area", p.slug, area.code),
             productId: product.id,
             side: area.side,
             code: area.code,
