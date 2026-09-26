@@ -1,8 +1,8 @@
 # Architecture
 
-## 1. Placement in the repository
+## 1. Repository
 
-This repository already contains **VoiceLab** (an unrelated Vite + Netlify app at the repo root). Per the "do not overwrite an existing project" rule, the Design Studio is a **self-contained application in `design-studio/`** with its own `package.json`, lockfile, docs and tests. Nothing at the repo root is modified. The folder can be moved to its own repository later (`git subtree split --prefix design-studio`) without code changes.
+This repository contains only the Design Studio. It was originally built in `design-studio/` inside another repository and exported here with its full history (`git subtree split`).
 
 ## 2. Stack
 

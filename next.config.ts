@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     "/api/**/*": ["./public/fonts/design/**/*", "./public/mockups/**/*", "./drizzle/**/*"],
     "/admin/**/*": ["./public/fonts/design/**/*", "./public/mockups/**/*"],
   },
-  // This app lives in a sub-folder of a repo that has its own lockfile; pin the root.
+  // Pin the project root (the app has also lived inside a larger monorepo).
   turbopack: { root: path.resolve(".") },
   outputFileTracingRoot: path.resolve("."),
   poweredByHeader: false,

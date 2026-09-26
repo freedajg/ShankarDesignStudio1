@@ -2,12 +2,9 @@
 
 Self-service custom apparel studio for Sweet Ginger Fashions (The T-Shirt Shop · Sweet Ginger Basics · Ginger Prints): choose a garment, design it, see it on the shirt, order one piece or a bulk size-run, and hand production a complete, printable order.
 
-> This folder is a standalone app. The repository root contains an unrelated project (VoiceLab); nothing here depends on it.
-
 ## Quick start
 
 ```bash
-cd design-studio
 npm install
 npm run dev          # migrates + seeds an embedded Postgres, then starts http://localhost:3000
 ```
