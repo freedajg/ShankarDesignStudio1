@@ -8,10 +8,11 @@ import { siteUrl } from "@/lib/site-url";
  * confusing runtime error. Nothing here is ever sent to the browser.
  */
 
+// Lenient: dashboards make it easy to type "True", "yes" or " on".
 const bool = z
-  .enum(["true", "false", "1", "0", ""])
+  .string()
   .optional()
-  .transform((v) => v === "true" || v === "1");
+  .transform((v) => /^(true|1|yes|on)$/i.test((v ?? "").trim()));
 
 const schema = z
   .object({
@@ -102,8 +103,19 @@ function sharedDatabaseUrl() {
   return v || undefined;
 }
 
-function isDemo(env: { DEMO_MODE: boolean; NODE_ENV: string; DATABASE_URL?: string }) {
-  return env.DEMO_MODE || (env.NODE_ENV === "production" && !env.DATABASE_URL);
+/**
+ * Demo when asked for, or when a production deployment isn't set up to take
+ * real orders: no database, or no real payment provider (unless dev payments
+ * are explicitly allowed). A demo is labelled on every page and never takes
+ * money, so this is safe — and it beats failing every request because a
+ * hosting integration added DATABASE_URL before payments were configured.
+ * DEMO_MODE=false forces the strict production checks.
+ */
+function isDemo(env: { DEMO_MODE: boolean; NODE_ENV: string; DATABASE_URL?: string; PAYMENT_PROVIDER: string; ALLOW_DEV_PAYMENTS: boolean }) {
+  if (env.DEMO_MODE) return true;
+  if (/^(false|0|no|off)$/i.test((process.env.DEMO_MODE ?? "").trim())) return false;
+  if (env.NODE_ENV !== "production") return false;
+  return !env.DATABASE_URL || (env.PAYMENT_PROVIDER === "dev" && !env.ALLOW_DEV_PAYMENTS);
 }
 
 export type Env = z.infer<typeof schema>;

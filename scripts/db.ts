@@ -18,7 +18,8 @@ async function migrate() {
     const { default: postgres } = await import("postgres");
     const { drizzle } = await import("drizzle-orm/postgres-js");
     const { migrate } = await import("drizzle-orm/postgres-js/migrator");
-    const client = postgres(url, { max: 1 });
+    const { pgConnectionUrl } = await import("../src/server/db/url");
+    const client = postgres(pgConnectionUrl(url), { max: 1 });
     await migrate(drizzle(client), { migrationsFolder: "drizzle" });
     await client.end();
   } else {

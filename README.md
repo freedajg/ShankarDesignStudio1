@@ -46,8 +46,11 @@ its **own** temporary copy of the data, so an image made on one server can be mi
 
 1. Vercel → your project → **Storage** → **Create Database** → **Neon** (Serverless Postgres, free plan) →
    **Connect** it to this project with all environments ticked. This adds `DATABASE_URL` for you.
-2. Settings → Environment Variables → add **`DEMO_MODE`** = `true` (Production and Preview).
-3. Deployments → ⋯ → **Redeploy**.
+2. Deployments → ⋯ → **Redeploy**. (Without a real payment provider the site stays in labelled demo mode
+   automatically; `DEMO_MODE=true` is optional.)
+
+Check the setup any time at **`/api/health`** — it shows whether the configuration is valid, the database
+connects, and AI is on (no secrets are shown).
 
 On first start the site creates its tables and the demo data by itself, and stores images in the database
 (`STORAGE_DRIVER=database`, the default on Vercel with a database). Everything stays demo-labelled with

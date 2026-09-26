@@ -2,6 +2,7 @@ import "server-only";
 import path from "node:path";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./schema";
+import { pgConnectionUrl } from "./url";
 import { env } from "../env";
 
 export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -20,7 +21,7 @@ async function connect(): Promise<Db> {
     const { default: postgres } = await import("postgres");
     const { drizzle } = await import("drizzle-orm/postgres-js");
     // prepare:false keeps us compatible with Supabase's transaction pooler (pgbouncer).
-    const client = postgres(e.DATABASE_URL, { prepare: false, max: 10 });
+    const client = postgres(pgConnectionUrl(e.DATABASE_URL), { prepare: false, max: 10 });
     // A demo on a shared database keeps its own tables up to date.
     if (e.DEMO_MODE) await migratePostgres(e.DATABASE_URL);
     return drizzle(client, { schema }) as unknown as Db;
@@ -60,7 +61,7 @@ async function migratePostgres(url: string) {
   const { drizzle } = await import("drizzle-orm/postgres-js");
   const { migrate } = await import("drizzle-orm/postgres-js/migrator");
   for (let attempt = 1; ; attempt++) {
-    const client = postgres(url, { prepare: false, max: 1, onnotice: () => {} });
+    const client = postgres(pgConnectionUrl(url), { prepare: false, max: 1, onnotice: () => {} });
     try {
       await migrate(drizzle(client), { migrationsFolder: path.join(process.cwd(), "drizzle") });
       return;

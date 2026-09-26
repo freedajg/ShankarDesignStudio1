@@ -72,3 +72,14 @@ describe("settings", () => {
     ).toThrow(/shipping/);
   });
 });
+
+describe("postgres connection strings", () => {
+  it("drops libpq-only parameters postgres.js would forward to the server (Neon's channel_binding)", async () => {
+    const { pgConnectionUrl, redactUrl } = await import("@/server/db/url");
+    const neon = "postgresql://user:secret@ep-x-pooler.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+    const clean = pgConnectionUrl(neon);
+    expect(clean).not.toContain("channel_binding");
+    expect(clean).toContain("sslmode=require");
+    expect(redactUrl(neon)).not.toContain("secret");
+  });
+});
