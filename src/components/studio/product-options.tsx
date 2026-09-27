@@ -71,7 +71,7 @@ export function PrintAreaPicker() {
   return (
     <fieldset>
       <legend className="mb-2 text-sm font-medium">Print area — {side}</legend>
-      <div role="radiogroup" aria-label={`Print area on the ${side}`} className="flex flex-wrap gap-2">
+      <div role="radiogroup" aria-label={`Print area on the ${side}`} className="grid grid-cols-2 gap-2">
         {areas.map((a) => (
           <button
             key={a.code}

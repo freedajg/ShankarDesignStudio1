@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 import type { Db } from "./db/client";
 import * as t from "./db/schema";
-import { ensureStaffUser, seedDemoData } from "./db/seed";
+import { ensureStaffUser, seedDemoData, syncPrintAreas } from "./db/seed";
 import { hashPassword } from "./auth/crypto";
 import { DevPaymentProvider, paymentProvider } from "./payments/provider";
 import { processUpload } from "./services/artwork";
@@ -28,6 +28,9 @@ export const DEMO_STAFF = [
 ];
 
 const DEMO_OWNER = "d".repeat(64);
+
+/** bump when the demo catalogue gains rows that existing demo databases should receive */
+const CATALOGUE_VERSION = 2;
 
 const text = (over: Partial<TextElement>): TextElement => ({
   id: `demo_${randomUUID().slice(0, 8)}`,
@@ -163,7 +166,15 @@ async function demoOrder(db: Db, spec: DemoOrder, logoId: string, admin: { id: s
 /** Fills an empty demo database: catalogue, staff logins and a few sample orders. */
 export async function ensureDemoData(db: Db) {
   const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(t.products);
-  if (n > 0) return;
+  if (n > 0) {
+    // catalogue additions since this database was filled (once per catalogue version)
+    const fresh = await db.insert(t.rateLimits).values({ key: `demo:catalogue:${CATALOGUE_VERSION}`, windowStart: new Date(), count: 1 }).onConflictDoNothing().returning();
+    if (fresh.length) {
+      const added = await syncPrintAreas(db);
+      if (added) console.info(`[demo] added ${added} new print areas`);
+    }
+    return;
+  }
   // several instances may start at once on a shared database: only one fills it
   const claimed = await db.insert(t.rateLimits).values({ key: "demo:seed", windowStart: new Date(), count: 1 }).onConflictDoNothing().returning();
   if (!claimed.length) {

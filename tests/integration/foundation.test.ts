@@ -150,3 +150,24 @@ describe("database file storage", () => {
     }
   });
 });
+
+describe("print areas", () => {
+  it("offers the standard placements, and adds new ones to databases seeded earlier", async () => {
+    const { createTestDb } = await import("../support/db");
+    const { loadProductConfig } = await import("@/server/services/catalogue");
+    const { syncPrintAreas } = await import("@/server/db/seed");
+    const t = await import("@/server/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const db = await createTestDb();
+    const crew = (await loadProductConfig(db, { slug: "classic-crew-tshirt" }))!;
+    const codes = (side: string) => crew.printAreas.filter((a) => a.side === side).map((a) => a.code);
+    expect(codes("front")).toEqual(["FULL_FRONT", "OVERSIZED_FRONT", "CENTER_CHEST", "LEFT_CHEST", "RIGHT_CHEST"]);
+    expect(codes("back")).toEqual(["FULL_BACK", "OVERSIZED_BACK", "UPPER_BACK", "BACK_NECK"]);
+    expect(crew.printAreas.find((a) => a.code === "OVERSIZED_FRONT")).toMatchObject({ widthMm: 355, heightMm: 430, sizeClass: "LARGE" });
+
+    // an older database without the new placements gets them, and nothing else changes
+    await db.delete(t.printAreas).where(eq(t.printAreas.code, "OVERSIZED_FRONT"));
+    expect(await syncPrintAreas(db)).toBe(2); // crew + oversized tee (the polo has no oversized front)
+    expect(await syncPrintAreas(db)).toBe(0);
+  });
+});

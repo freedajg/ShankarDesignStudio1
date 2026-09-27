@@ -244,6 +244,40 @@ export async function seedDemoData(db: Db) {
   });
 }
 
+/**
+ * Adds print areas introduced after a database was first seeded (existing rows —
+ * possibly edited by staff — are left untouched). Returns how many were added.
+ */
+export async function syncPrintAreas(db: Db) {
+  let added = 0;
+  for (const p of productSeeds) {
+    const [product] = await db.select({ id: t.products.id }).from(t.products).where(eq(t.products.slug, p.slug));
+    if (!product) continue;
+    const spec = garments.find((g) => g.style === p.style)!;
+    for (const [i, area] of spec.printAreas.entries()) {
+      const rows = await db
+        .insert(t.printAreas)
+        .values({
+          id: stableId("area", p.slug, area.code),
+          productId: product.id,
+          side: area.side,
+          code: area.code,
+          name: area.name,
+          widthMm: area.widthMm,
+          heightMm: area.heightMm,
+          sizeClass: area.sizeClass,
+          isDefault: area.isDefault,
+          sort: i,
+          ...placementFor(spec, area),
+        })
+        .onConflictDoNothing()
+        .returning({ id: t.printAreas.id });
+      added += rows.length;
+    }
+  }
+  return added;
+}
+
 /** Creates a staff user if missing and ensures it has the given role. */
 export async function ensureStaffUser(
   db: Db,

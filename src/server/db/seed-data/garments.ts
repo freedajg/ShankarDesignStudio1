@@ -78,9 +78,17 @@ export const garments: GarmentSpec[] = [
       back: { outline: crewBody("C430 146 570 146 590 120"), details: crewDetails(false), armpits: [[262, 390], [738, 390]] },
     },
     printAreas: [
+      // front — standard placements used by DTF / screen printers (sizes ≈ 11×14", 14×17", 10×4", 3.5")
       { code: "FULL_FRONT", side: "front", name: "Full front", widthMm: 280, heightMm: 350, centerX: 500, top: 245, sizeClass: "STANDARD", isDefault: true },
+      { code: "OVERSIZED_FRONT", side: "front", name: "Oversized front", widthMm: 355, heightMm: 430, centerX: 500, top: 225, sizeClass: "LARGE", isDefault: false },
+      { code: "CENTER_CHEST", side: "front", name: "Centre chest", widthMm: 250, heightMm: 100, centerX: 500, top: 245, sizeClass: "SMALL", isDefault: false },
       { code: "LEFT_CHEST", side: "front", name: "Left chest", widthMm: 90, heightMm: 90, centerX: 622, top: 250, sizeClass: "SMALL", isDefault: false },
+      { code: "RIGHT_CHEST", side: "front", name: "Right chest", widthMm: 90, heightMm: 90, centerX: 378, top: 250, sizeClass: "SMALL", isDefault: false },
+      // back
       { code: "FULL_BACK", side: "back", name: "Full back", widthMm: 300, heightMm: 380, centerX: 500, top: 200, sizeClass: "STANDARD", isDefault: true },
+      { code: "OVERSIZED_BACK", side: "back", name: "Oversized back", widthMm: 355, heightMm: 450, centerX: 500, top: 190, sizeClass: "LARGE", isDefault: false },
+      { code: "UPPER_BACK", side: "back", name: "Upper back", widthMm: 300, heightMm: 100, centerX: 500, top: 200, sizeClass: "SMALL", isDefault: false },
+      { code: "BACK_NECK", side: "back", name: "Back neck", widthMm: 75, heightMm: 75, centerX: 500, top: 182, sizeClass: "SMALL", isDefault: false },
     ],
   },
   {
@@ -122,8 +130,14 @@ export const garments: GarmentSpec[] = [
     },
     printAreas: [
       { code: "FULL_FRONT", side: "front", name: "Full front", widthMm: 300, heightMm: 400, centerX: 500, top: 245, sizeClass: "LARGE", isDefault: true },
+      { code: "OVERSIZED_FRONT", side: "front", name: "Oversized front", widthMm: 380, heightMm: 480, centerX: 500, top: 230, sizeClass: "LARGE", isDefault: false },
+      { code: "CENTER_CHEST", side: "front", name: "Centre chest", widthMm: 260, heightMm: 100, centerX: 500, top: 250, sizeClass: "SMALL", isDefault: false },
       { code: "LEFT_CHEST", side: "front", name: "Left chest", widthMm: 90, heightMm: 90, centerX: 632, top: 255, sizeClass: "SMALL", isDefault: false },
+      { code: "RIGHT_CHEST", side: "front", name: "Right chest", widthMm: 90, heightMm: 90, centerX: 368, top: 255, sizeClass: "SMALL", isDefault: false },
       { code: "FULL_BACK", side: "back", name: "Full back", widthMm: 320, heightMm: 420, centerX: 500, top: 190, sizeClass: "LARGE", isDefault: true },
+      { code: "OVERSIZED_BACK", side: "back", name: "Oversized back", widthMm: 380, heightMm: 500, centerX: 500, top: 185, sizeClass: "LARGE", isDefault: false },
+      { code: "UPPER_BACK", side: "back", name: "Upper back", widthMm: 320, heightMm: 110, centerX: 500, top: 190, sizeClass: "SMALL", isDefault: false },
+      { code: "BACK_NECK", side: "back", name: "Back neck", widthMm: 75, heightMm: 75, centerX: 500, top: 172, sizeClass: "SMALL", isDefault: false },
     ],
   },
   {
@@ -170,6 +184,8 @@ export const garments: GarmentSpec[] = [
       { code: "LEFT_CHEST", side: "front", name: "Left chest", widthMm: 90, heightMm: 90, centerX: 624, top: 250, sizeClass: "SMALL", isDefault: true },
       { code: "RIGHT_CHEST", side: "front", name: "Right chest", widthMm: 90, heightMm: 90, centerX: 376, top: 250, sizeClass: "SMALL", isDefault: false },
       { code: "FULL_BACK", side: "back", name: "Full back", widthMm: 300, heightMm: 350, centerX: 500, top: 200, sizeClass: "STANDARD", isDefault: true },
+      { code: "UPPER_BACK", side: "back", name: "Upper back", widthMm: 300, heightMm: 100, centerX: 500, top: 190, sizeClass: "SMALL", isDefault: false },
+      { code: "BACK_NECK", side: "back", name: "Back neck", widthMm: 75, heightMm: 75, centerX: 500, top: 168, sizeClass: "SMALL", isDefault: false },
     ],
   },
 ];
