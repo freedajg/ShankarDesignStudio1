@@ -25,6 +25,23 @@ Selected states use **ink** (ring or inset border + muted fill), not coral. The 
 
 Status badges map every order status to one of these tones (neutral → info → success → danger), never colour alone — the label is always present.
 
+## Light and dark mode
+
+- Every colour is a token; `:root[data-theme="dark"]` in `globals.css` gives each a dark value, so components never branch on the theme.
+- The choice (Light / Dark / System) is in the header of the shop, studio and admin (`ThemeToggle`), stored in `localStorage["sg-theme"]`; "System" follows the device. An inline script in `app/layout.tsx` applies it before first paint (no white flash).
+- Tokens for text on filled colours: `on-ink`, `on-accent`, `on-danger`. On a *real* garment/print colour use `on-light` / `on-dark` (never themed). Swatch outlines use `swatch-edge`; the backdrop behind garment pictures and the studio canvas is `garment-bg` (mid slate in dark mode so navy/black shirts keep their outline). Modal backdrops use `scrim`.
+- The garment always keeps its real colour; the canvas background follows the theme at runtime.
+
+## Screen sizes
+
+| | Width | Studio | Other pages |
+|---|---|---|---|
+| Phone | < 768 px | canvas + bottom tab bar (Shirt · Text · Upload · AI · Layers · Sizes) and sheets | single column |
+| Tablet | 768–1023 px | canvas + side panel with tabs **Shirt · Design · Sizes**; editing happens in the panel | two columns where useful; admin uses a top nav |
+| Desktop | ≥ 1024 px | three columns: shirt options · canvas · tools | full layouts; admin sidebar |
+
+Breakpoints are Tailwind's `md` (768) and `lg` (1024); JavaScript uses the same queries (`src/lib/use-media-query.ts`).
+
 ## Typography
 - UI: **Inter** (self-hosted via fontsource; no third-party font requests). Tabular numerals (`tabular-nums`) for prices, quantities and tables.
 - Scale (rem): 0.75 caption · 0.875 body-sm · 1 body · 1.125 lead · 1.5 h3 · 2 h2 · 2.75 h1 (marketing only). Line-height 1.5 body, 1.15 headings, `-0.01em` tracking on headings.

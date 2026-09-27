@@ -67,7 +67,10 @@ const CONTROL_STYLE = {
   lockSkewingY: true,
 };
 
-export const STAGE_BG = "#F3F4F0"; // --color-surface-muted
+export const STAGE_BG = "#F3F4F0"; // --color-garment-bg (light) — fallback only
+
+/** The stage colour follows the light/dark theme (read from the CSS token). */
+const stageBg = () => getComputedStyle(document.documentElement).getPropertyValue("--color-garment-bg").trim() || STAGE_BG;
 const MIN_FONT_MM = 3;
 const MIN_IMAGE_MM = 5;
 
@@ -107,7 +110,7 @@ export function Stage({ onEditText, className }: { onEditText?: () => void; clas
       overlayVpt: true,
       // the stage colour must be painted into the canvas: multiply/screen shading
       // blends against it (over transparent pixels it would paint white boxes)
-      backgroundColor: STAGE_BG,
+      backgroundColor: stageBg(),
     });
     const entries = new Map<string, Entry>();
     let disposed = false;
@@ -398,7 +401,15 @@ export function Stage({ onEditText, className }: { onEditText?: () => void; clas
       }
     })();
 
+    // repaint the stage when the theme changes (the garment keeps its colour)
+    const themeObserver = new MutationObserver(() => {
+      canvas.backgroundColor = stageBg();
+      canvas.requestRenderAll();
+    });
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
     return () => {
+      themeObserver.disconnect();
       disposed = true;
       unsub();
       ro.disconnect();

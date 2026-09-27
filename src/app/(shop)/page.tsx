@@ -37,7 +37,7 @@ export default async function Home() {
         {hero?.mockup && (
           <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-4" aria-hidden>
             {hero.colours.slice(1, 5).map((c, i) => (
-              <div key={c.id} className={cn("rounded-[var(--radius-lg)] bg-surface-muted p-3", i % 2 === 1 && "translate-y-6")}>
+              <div key={c.id} className={cn("rounded-[var(--radius-lg)] bg-garment-bg p-3", i % 2 === 1 && "translate-y-6")}>
                 <GarmentImage mockup={hero.mockup!} hex={c.hex} alt="" priority />
               </div>
             ))}
@@ -55,7 +55,7 @@ export default async function Home() {
                 href={`/products/${p.slug}`}
                 className="group block rounded-[var(--radius-lg)] border border-line bg-surface p-4 transition-shadow hover:shadow-card"
               >
-                <div className="rounded-[var(--radius-md)] bg-surface-muted p-4">
+                <div className="rounded-[var(--radius-md)] bg-garment-bg p-4">
                   {p.mockup && (
                     <GarmentImage
                       mockup={p.mockup}

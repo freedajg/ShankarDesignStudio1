@@ -39,13 +39,32 @@
   --color-danger-soft: #fdecec;
   --color-info: #172554;
   --color-info-soft: #e8ecf7;
+  /* text/icons placed ON a filled colour */
+  --color-on-ink: #ffffff;
+  --color-on-accent: #111827;
+  --color-on-danger: #ffffff;
+  /* backdrop behind garment pictures and the studio canvas */
+  --color-garment-bg: #f3f4f0;
+  /* brand mark: fixed deep navy in both themes */
+  --color-brand: #172554;
+  /* outline around colour swatches, visible on both light and dark surfaces */
+  --color-swatch-edge: rgb(17 24 39 / 0.2);
+  /* on a real garment/print colour — never themed */
+  --color-on-light: #111827;
+  --color-on-dark: #ffffff;
+  /* modal backdrop and the transparency checkerboard */
+  --color-scrim: rgb(17 24 39 / 0.4);
+  --color-checker-a: #eeeeee;
+  --color-checker-b: #ffffff;
+  --color-ai-soft-a: #fff7f4;
+  --color-ai-soft-b: #fdf8ec;
 
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-card: 0 1px 2px rgb(28 26 23 / 0.04), 0 2px 8px rgb(28 26 23 / 0.04);
-  --shadow-float: 0 4px 12px rgb(28 26 23 / 0.08), 0 16px 40px rgb(28 26 23 / 0.12);
+  --shadow-card: 0 1px 2px var(--shadow-tint-1), 0 2px 8px var(--shadow-tint-1);
+  --shadow-float: 0 4px 12px var(--shadow-tint-2), 0 16px 40px var(--shadow-tint-3);
 
   --animate-sheet-up: sheet-up 180ms ease-out;
   --animate-fade-in: fade-in 150ms ease-out;
@@ -59,12 +78,70 @@
   }
 }
 
+/* Shadow tints (outside @theme: plain variables, overridden in dark mode). */
+:root {
+  --shadow-tint-1: rgb(17 24 39 / 0.05);
+  --shadow-tint-2: rgb(17 24 39 / 0.08);
+  --shadow-tint-3: rgb(17 24 39 / 0.12);
+  color-scheme: light;
+}
+
+/*
+ * Dark theme. The same tokens with dark values, so every component follows
+ * automatically. Set by the inline script in app/layout.tsx from the visitor's
+ * choice (Light / Dark / System). The garment keeps its real colour.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-canvas: #0d1117;
+  --color-surface: #151a23;
+  --color-surface-muted: #1c222d;
+  --color-surface-sunken: #252c39;
+  --color-ink: #f3f4f0;
+  --color-ink-muted: #b3bac6;
+  --color-ink-subtle: #8f98a7;
+  --color-line: #2a313d;
+  --color-line-strong: #3b4453;
+  --color-navy: #a9b8ec;
+  --color-navy-soft: #1a2340;
+  --color-accent: #f97360;
+  --color-accent-hover: #fb8a79;
+  --color-accent-ink: #ff9e8f;
+  --color-accent-soft: #3a1f1b;
+  --color-gold: #e0b35a;
+  --color-gold-soft: #33290f;
+  --color-success: #4ade80;
+  --color-success-soft: #10291a;
+  --color-warning: #f59e0b;
+  --color-warning-ink: #fcd34d;
+  --color-warning-soft: #30230a;
+  --color-danger: #f87171;
+  --color-danger-soft: #3a1718;
+  --color-info: #b8c5f2;
+  --color-info-soft: #1a2340;
+  --color-on-ink: #111827;
+  --color-on-accent: #111827;
+  --color-on-danger: #111827;
+  --color-scrim: rgb(0 0 0 / 0.6);
+  --color-swatch-edge: rgb(255 255 255 / 0.3);
+  /* mid slate: dark garments keep their outline, white ones still pop */
+  --color-garment-bg: #394150;
+  --color-checker-a: #2a303b;
+  --color-checker-b: #3a414e;
+  --color-ai-soft-a: #2a1a18;
+  --color-ai-soft-b: #2a2415;
+  --shadow-tint-1: rgb(0 0 0 / 0.3);
+  --shadow-tint-2: rgb(0 0 0 / 0.4);
+  --shadow-tint-3: rgb(0 0 0 / 0.5);
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
   }
   body {
     background: var(--color-canvas);
+    transition: background-color 150ms ease-out;
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
@@ -99,6 +176,6 @@
 @utility ai-edge-soft {
   border: 1.5px solid transparent;
   background:
-    linear-gradient(135deg, #fff7f4, #fdf8ec) padding-box,
+    linear-gradient(135deg, var(--color-ai-soft-a), var(--color-ai-soft-b)) padding-box,
     linear-gradient(135deg, var(--color-accent), var(--color-gold)) border-box;
 }

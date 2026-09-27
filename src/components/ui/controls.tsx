@@ -157,12 +157,12 @@ export function Swatch({
       <span
         className={cn(
           "grid place-items-center rounded-full border transition-[box-shadow,transform] duration-150",
-          light ? "border-black/20" : "border-black/10",
+          "border-swatch-edge",
           selected ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : "group-hover:scale-105 group-hover:ring-2 group-hover:ring-line-strong group-hover:ring-offset-2 group-hover:ring-offset-surface",
         )}
         style={{ backgroundColor: hex, width: size, height: size }}
       >
-        {selected && <Check className={cn("size-4", light ? "text-ink" : "text-white")} strokeWidth={3} aria-hidden />}
+        {selected && <Check className={cn("size-4", light ? "text-on-light" : "text-on-dark")} strokeWidth={3} aria-hidden />}
       </span>
       {showLabel && (
         <span className={cn("max-w-full truncate text-[0.7rem] leading-tight", selected ? "font-semibold text-ink" : "text-ink-muted")}>{name}</span>

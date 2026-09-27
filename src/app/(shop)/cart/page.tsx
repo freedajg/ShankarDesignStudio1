@@ -70,7 +70,7 @@ export default async function CartPage() {
               <Card className="flex flex-col gap-4 p-4 sm:flex-row" data-testid="cart-line">
                 <div className="flex shrink-0 gap-2">
                   {l.previews.map((p) => (
-                    <figure key={p.side} className="w-32 rounded-[var(--radius-sm)] bg-surface-muted p-1.5 sm:w-36">
+                    <figure key={p.side} className="w-32 rounded-[var(--radius-sm)] bg-garment-bg p-1.5 sm:w-36">
                       {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered data URL of the exact ordered design */}
                       <img src={p.src} alt={`${l.productName} ${p.side} with your design`} className="w-full" />
                       <figcaption className="text-center text-xs capitalize text-ink-muted">{p.side}</figcaption>
@@ -82,7 +82,7 @@ export default async function CartPage() {
                     <div>
                       <h2 className="font-semibold">{l.productName}</h2>
                       <p className="text-sm text-ink-muted">
-                        <span className="mr-1 inline-block size-3 rounded-full border border-black/15 align-middle" style={{ backgroundColor: l.colourHex }} />
+                        <span className="mr-1 inline-block size-3 rounded-full border border-swatch-edge align-middle" style={{ backgroundColor: l.colourHex }} />
                         {l.colourName} · {l.printMethodName} · printed {l.placements.join(" & ")}
                       </p>
                     </div>

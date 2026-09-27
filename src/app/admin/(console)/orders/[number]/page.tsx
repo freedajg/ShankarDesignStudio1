@@ -93,7 +93,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                       {item.productName}
                     </h2>
                     <p className="text-sm text-ink-muted">
-                      <span className="mr-1 inline-block size-3 rounded-full border border-black/20 align-middle" style={{ backgroundColor: item.colourHex }} />
+                      <span className="mr-1 inline-block size-3 rounded-full border border-swatch-edge align-middle" style={{ backgroundColor: item.colourHex }} />
                       {item.colourName} ({item.colourHex}) · {item.printMethodCode} · {item.quantity} pcs
                     </p>
                   </div>
@@ -105,7 +105,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                     const area = product.printAreas.find((a) => a.side === p.side && a.code === doc.surfaces[p.side].printAreaCode)!;
                     return (
                       <figure key={p.side} className="flex flex-col gap-3">
-                        <div className="rounded-[var(--radius-md)] bg-surface-muted p-3">
+                        <div className="rounded-[var(--radius-md)] bg-garment-bg p-3">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={p.src} alt={`${p.side} design as ordered`} className="mx-auto w-full max-w-sm" />
                         </div>

@@ -19,16 +19,18 @@ export function GarmentImage({
   priority?: boolean;
 }) {
   const mask = `url(${mockup.maskUrl})`;
+  // every layer is clipped to the garment, so shading never tints the page behind it (matters in dark mode)
+  const clip = { maskImage: mask, WebkitMaskImage: mask, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" } as const;
   return (
-    <div role="img" aria-label={alt} className={cn("relative aspect-[1000/1100] w-full", className)}>
+    <div role="img" aria-label={alt} className={cn("relative isolate aspect-[1000/1100] w-full", className)}>
       <div
         className="absolute inset-0"
-        style={{ backgroundColor: hex, maskImage: mask, WebkitMaskImage: mask, maskSize: "100% 100%", WebkitMaskSize: "100% 100%" }}
+        style={{ backgroundColor: hex, ...clip }}
       />
       {/* eslint-disable-next-line @next/next/no-img-element -- blend-mode layers, not content images */}
-      <img src={mockup.shadeUrl} alt="" aria-hidden className="absolute inset-0 size-full mix-blend-multiply" loading={priority ? "eager" : "lazy"} />
+      <img src={mockup.shadeUrl} alt="" aria-hidden className="absolute inset-0 size-full mix-blend-multiply" style={clip} loading={priority ? "eager" : "lazy"} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={mockup.highlightUrl} alt="" aria-hidden className="absolute inset-0 size-full mix-blend-screen" loading={priority ? "eager" : "lazy"} />
+      <img src={mockup.highlightUrl} alt="" aria-hidden className="absolute inset-0 size-full mix-blend-screen" style={clip} loading={priority ? "eager" : "lazy"} />
     </div>
   );
 }

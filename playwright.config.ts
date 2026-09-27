@@ -35,7 +35,8 @@ export default defineConfig({
     launchOptions: executablePath ? { executablePath } : undefined,
   },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testIgnore: /mobile\.spec/ },
+    { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testIgnore: /(mobile|tablet)\.spec/ },
+    { name: "tablet", use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 }, hasTouch: true }, testMatch: /tablet\.spec/ },
     { name: "mobile", use: { ...devices["Pixel 7"] }, testMatch: /mobile\.spec/ },
   ],
   webServer: {

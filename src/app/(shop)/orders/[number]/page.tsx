@@ -104,7 +104,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             <Card key={item.id} className="p-4">
               <div className="flex gap-2">
                 {item.previews.map((p) => (
-                  <figure key={p.side} className="w-28 rounded-[var(--radius-sm)] bg-surface-muted p-1">
+                  <figure key={p.side} className="w-28 rounded-[var(--radius-sm)] bg-garment-bg p-1">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.src} alt={`${item.productName} ${p.side}`} className="w-full" />
                     <figcaption className="text-center text-xs capitalize text-ink-muted">{p.side}</figcaption>

@@ -7,6 +7,7 @@ import { requirePermissionPage } from "@/server/auth/session";
 import { logout } from "../login/actions";
 import { Badge } from "@/components/ui/feedback";
 import { env } from "@/server/env";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s · Admin" }, robots: { index: false } };
 
@@ -20,9 +21,19 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="flex min-h-full flex-1 flex-col lg:flex-row">
       <aside className="border-b border-line bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-60 lg:flex-col lg:border-b-0 lg:border-r">
-        <div className="flex items-center justify-between gap-4 px-4 py-3 lg:py-5">
+        {/* phones/tablets: one row; desktop sidebar: logo above the controls */}
+        <div className="flex items-center justify-between gap-4 px-4 py-3 lg:flex-col lg:items-start lg:gap-3 lg:py-5">
           <Logo href="/admin" />
-          {env().DEMO_MODE && <Badge tone="info">Demo</Badge>}
+          <div className="flex items-center gap-1 lg:w-full lg:justify-between">
+            {env().DEMO_MODE && <Badge tone="info">Demo</Badge>}
+            <ThemeToggle />
+            {/* phones and tablets: the sidebar footer is hidden, so sign-out lives here */}
+            <form action={logout} className="lg:hidden">
+              <Button variant="ghost" size="icon" type="submit" aria-label="Sign out" title="Sign out">
+                <LogOut aria-hidden />
+              </Button>
+            </form>
+          </div>
         </div>
         <nav aria-label="Admin" className="flex gap-1 overflow-x-auto px-2 pb-2 lg:flex-1 lg:flex-col lg:pb-0">
           {nav.map(({ href, label, icon: Icon }) => (

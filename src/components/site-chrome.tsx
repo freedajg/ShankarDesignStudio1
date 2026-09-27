@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "./brand";
 import { CartBadge } from "./cart-badge";
+import { ThemeToggle } from "./theme-toggle";
 
 export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
   return (
@@ -14,6 +15,7 @@ export function SiteHeader({ cartCount = 0 }: { cartCount?: number }) {
           <Link href="/bulk" className="hidden rounded-[var(--radius-sm)] px-3 py-2 text-ink-muted hover:text-ink sm:block">
             Bulk &amp; corporate
           </Link>
+          <ThemeToggle />
           <CartBadge initial={cartCount} />
         </nav>
       </div>

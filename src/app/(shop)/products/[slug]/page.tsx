@@ -38,7 +38,7 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
   return (
     <main className="mx-auto grid max-w-6xl gap-10 px-4 py-8 md:grid-cols-2 md:py-12">
       <div className="md:sticky md:top-24 md:self-start">
-        <div className="rounded-[var(--radius-lg)] bg-surface-muted p-6 sm:p-10">
+        <div className="rounded-[var(--radius-lg)] bg-garment-bg p-6 sm:p-10">
           <GarmentImage mockup={p.mockups.front} hex={colour.hex} alt={`${p.name} in ${colour.name}, front`} priority />
         </div>
       </div>
@@ -93,12 +93,12 @@ export default async function ProductPage({ params, searchParams }: PageProps<"/
                   aria-current={c.id === colour.id ? "true" : undefined}
                   title={c.name}
                   className={cn(
-                    "grid size-10 place-items-center rounded-full border border-line-strong",
+                    "grid size-10 place-items-center rounded-full border border-swatch-edge",
                     c.id === colour.id && "ring-2 ring-accent ring-offset-2 ring-offset-canvas",
                   )}
                   style={{ backgroundColor: c.hex }}
                 >
-                  {c.id === colour.id && <Check className={cn("size-4", isLightColour(c.hex) ? "text-ink" : "text-white")} aria-hidden />}
+                  {c.id === colour.id && <Check className={cn("size-4", isLightColour(c.hex) ? "text-on-light" : "text-on-dark")} aria-hidden />}
                 </Link>
               </li>
             ))}

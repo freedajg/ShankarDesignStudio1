@@ -6,7 +6,7 @@ export function Logo({ className, href = "/" }: { className?: string; href?: str
   return (
     <Link href={href} className={cn("inline-flex items-center gap-2.5 rounded-sm", className)} aria-label="Sweet Ginger Design Studio — home">
       <svg viewBox="0 0 32 32" className="size-8" aria-hidden>
-        <rect width="32" height="32" rx="9" className="fill-navy" />
+        <rect width="32" height="32" rx="9" className="fill-brand" />
         <path
           d="M9 21.5c2.2 1.6 5.6 1.9 7.8.4 2.6-1.8 2.2-4.7-.6-5.5l-2.6-.7c-2.3-.7-2.4-3.1-.3-4.1 1.9-.9 4.4-.5 6 .9"
           fill="none"

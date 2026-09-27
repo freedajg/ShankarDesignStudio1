@@ -71,7 +71,7 @@ export function SizePicker() {
                   onClick={() => setQuantities({ [size.id]: Math.max(1, qty) })}
                   className={cn(
                     "min-w-12 rounded-[var(--radius-sm)] border px-3 py-2 text-sm font-medium tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:line-through",
-                    active ? "border-ink bg-ink text-white" : "border-line-strong bg-surface hover:border-ink",
+                    active ? "border-ink bg-ink text-on-ink" : "border-line-strong bg-surface hover:border-ink",
                   )}
                 >
                   {size.code}

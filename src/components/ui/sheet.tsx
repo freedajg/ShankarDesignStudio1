@@ -26,7 +26,7 @@ export function Sheet({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <Dialog.Portal>
-        {modal && <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/25 data-[state=open]:animate-fade-in" />}
+        {modal && <Dialog.Overlay className="fixed inset-0 z-40 bg-scrim data-[state=open]:animate-fade-in" />}
         <Dialog.Content
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col rounded-t-[var(--radius-lg)] border-t border-line bg-surface shadow-float data-[state=open]:animate-sheet-up",

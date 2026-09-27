@@ -52,3 +52,11 @@ test("mobile: generate artwork with AI from the start card", async ({ page }) =>
   await dialog.getByTestId("ai-variation").first().getByRole("button", { name: "Use this design" }).click();
   await expect(page.getByRole("dialog", { name: "Edit image" })).toBeVisible();
 });
+
+test("mobile: follows the phone's dark setting by default", async ({ browser }) => {
+  const ctx = await browser.newContext({ colorScheme: "dark", viewport: { width: 412, height: 915 } });
+  const page = await ctx.newPage();
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await ctx.close();
+});

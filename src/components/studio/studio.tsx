@@ -26,6 +26,8 @@ import { Segmented } from "@/components/ui/controls";
 import { Sheet } from "@/components/ui/sheet";
 import { formatInr } from "@/domain/money";
 import type { Side } from "@/domain/design/schema";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { DESKTOP_UP, matches, TABLET_UP, useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/cn";
 import { useStudioActions } from "./actions";
 import { AddTextPanel, UploadPanel } from "./add-panels";
@@ -83,7 +85,10 @@ function StudioShell() {
   const actions = useStudioActions();
   const selected = useStudio(selectedElement);
   const [tab, setTab] = useState<MobileTab>(null);
-  const [rightTab, setRightTab] = useState<"design" | "order">("design");
+  // the side panel: desktop shows shirt options in their own rail; tablets get a "Shirt" tab instead
+  const isDesktop = useMediaQuery(DESKTOP_UP, true);
+  const [panelTab, setRightTab] = useState<"shirt" | "design" | "order">("design");
+  const rightTab = isDesktop && panelTab === "shirt" ? "design" : panelTab;
   const textRef = useRef<HTMLTextAreaElement>(null);
   const addTextRef = useRef<HTMLInputElement>(null);
   const sideEmpty = useStudio((s) => s.doc.surfaces[s.side].elements.length === 0);
@@ -99,7 +104,7 @@ function StudioShell() {
     setAiOpen(true);
   };
   const startText = () => {
-    if (window.matchMedia("(min-width: 1024px)").matches) {
+    if (matches(TABLET_UP)) {
       setRightTab("design");
       setTimeout(() => addTextRef.current?.focus(), 50);
     } else setTab("text");
@@ -125,23 +130,25 @@ function StudioShell() {
 
       <div className="flex min-h-0 flex-1">
         {/* left rail (desktop) */}
-        <aside aria-label="Product options" className="hidden w-72 shrink-0 overflow-y-auto border-r border-line bg-surface p-5 lg:block">
-          <ProductOptions />
-          <div className="mt-8">
-            <h2 className="mb-3 text-sm font-semibold">Layers</h2>
-            <LayersPanel />
-          </div>
-        </aside>
+        {isDesktop && (
+          <aside aria-label="Product options" className="hidden w-72 shrink-0 overflow-y-auto border-r border-line bg-surface p-5 lg:block">
+            <ProductOptions />
+            <div className="mt-8">
+              <h2 className="mb-3 text-sm font-semibold">Layers</h2>
+              <LayersPanel />
+            </div>
+          </aside>
+        )}
 
         {/* stage */}
         <main className="relative flex min-w-0 flex-1 flex-col" aria-label="Design canvas">
           <StageToolbar />
-          <Stage className="relative min-h-0 flex-1 touch-none select-none bg-surface-muted" onEditText={editText} />
+          <Stage className="relative min-h-0 flex-1 touch-none select-none bg-garment-bg" onEditText={editText} />
           <StageHint onAi={openAi} onAddText={startText} />
         </main>
 
-        {/* right rail (desktop) */}
-        <aside aria-label="Design tools" className="hidden w-[22rem] shrink-0 flex-col border-l border-line bg-surface lg:flex">
+        {/* side panel: tablet (with a Shirt tab) and desktop */}
+        <aside aria-label="Design tools" className="hidden w-80 shrink-0 flex-col border-l border-line bg-surface md:flex lg:w-[22rem]">
           <div className="border-b border-line p-3">
             <Segmented
               label="Panel"
@@ -149,13 +156,22 @@ function StudioShell() {
               onChange={setRightTab}
               className="w-full"
               options={[
-                { value: "design", label: "Design" },
-                { value: "order", label: "Sizes & price" },
+                ...(isDesktop ? [] : [{ value: "shirt" as const, label: "Shirt" }]),
+                { value: "design" as const, label: "Design" },
+                { value: "order" as const, label: isDesktop ? "Sizes & price" : "Sizes" },
               ]}
             />
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-5">
-            {rightTab === "design" ? (
+            {rightTab === "shirt" ? (
+              <div className="flex flex-col gap-8">
+                <ProductOptions />
+                <div>
+                  <h2 className="mb-3 text-sm font-semibold">Layers</h2>
+                  <LayersPanel />
+                </div>
+              </div>
+            ) : rightTab === "design" ? (
               <div className="flex flex-col gap-6">
                 {sideEmpty ? <DesignStart onAddText={startText} onAi={openAi} /> : <AiButton onClick={openAi} className="w-full" />}
                 <AddTextPanel inputRef={addTextRef} />
@@ -175,7 +191,7 @@ function StudioShell() {
         </aside>
       </div>
 
-      <OrderBar onAddToCart={actions.addToCart} busy={actions.busy === "cart"} onEditSizes={() => (window.matchMedia("(min-width: 1024px)").matches ? setRightTab("order") : setTab("order"))} />
+      <OrderBar onAddToCart={actions.addToCart} busy={actions.busy === "cart"} onEditSizes={() => (matches(TABLET_UP) ? setRightTab("order") : setTab("order"))} />
       <MobileTabBar tab={tab} setTab={(t) => (t === "ai" ? openAi() : setTab(t))} />
       <AiGenerator ai={ai} open={aiOpen} onOpenChange={setAiOpen} />
 
@@ -228,6 +244,7 @@ function TopBar({ onRetry, onSave, saving }: { onRetry: () => void; onSave: () =
         <p className="truncate px-2 text-xs text-ink-muted">{product.name}</p>
       </div>
       <SaveIndicator onRetry={onRetry} />
+      <ThemeToggle />
       <div className="flex items-center">
         <Button variant="ghost" size="icon" aria-label="Undo" title="Undo (Ctrl+Z)" disabled={!canUndo} onClick={undo}>
           <Undo2 aria-hidden />
@@ -305,7 +322,7 @@ function StageToolbar() {
 }
 
 const CountDot = ({ n }: { n: number }) => (
-  <span className="grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[0.7rem] font-semibold text-white" aria-label={`${n} items`}>
+  <span className="grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[0.7rem] font-semibold text-on-accent" aria-label={`${n} items`}>
     {n}
   </span>
 );
@@ -318,11 +335,11 @@ function StageHint({ onAi, onAddText }: { onAi: () => void; onAddText: () => voi
   return (
     <>
       {/* mobile: the start card floats over the bottom of the stage */}
-      <div className="absolute inset-x-3 bottom-3 lg:hidden">
+      <div className="absolute inset-x-3 bottom-3 md:hidden">
         <DesignStart compact onAddText={onAddText} onAi={onAi} />
       </div>
       {/* desktop: a quiet hint, with an AI shortcut */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-5 hidden flex-col items-center gap-2 lg:flex">
+      <div className="pointer-events-none absolute inset-x-0 bottom-5 hidden flex-col items-center gap-2 md:flex">
         <p className="sr-only">Add text or upload artwork to design the {side}.</p>
         <AiButton onClick={onAi} size="sm" className="pointer-events-auto">
           Or start with an AI-generated design
@@ -343,7 +360,7 @@ function OrderBar({ onAddToCart, busy, onEditSizes }: { onAddToCart: () => void;
   return (
     <div className="shrink-0 border-t border-line bg-surface px-3 py-2.5 sm:px-4 lg:py-3">
       <div className="mx-auto flex max-w-screen-2xl items-center gap-3">
-        <div className="hidden lg:block">
+        <div className="hidden md:block">
           <OrderModeToggle />
         </div>
         <button type="button" onClick={onEditSizes} className="min-w-0 flex-1 text-left" aria-label="Edit sizes and quantities">
@@ -381,7 +398,7 @@ function MobileTabBar({ tab, setTab }: { tab: MobileTab; setTab: (t: MobileTab) 
     { id: "order", label: "Sizes", icon: ShoppingBag },
   ];
   return (
-    <nav aria-label="Studio tools" className="grid shrink-0 grid-cols-6 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
+    <nav aria-label="Studio tools" className="grid shrink-0 grid-cols-6 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
       {items.map(({ id, label, icon: Icon }) => (
         <button
           key={id}
@@ -398,18 +415,12 @@ function MobileTabBar({ tab, setTab }: { tab: MobileTab; setTab: (t: MobileTab) 
   );
 }
 
-/** Mobile: a compact, non-blocking inspector while something is selected. */
+/** Phones: a compact, non-blocking inspector while something is selected. */
 function MobileInspector({ hidden, onDone }: { hidden: boolean; onDone: () => void }) {
   const selected = useStudio(selectedElement);
-  const [isDesktop, setIsDesktop] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const on = () => setIsDesktop(mq.matches);
-    on();
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  if (isDesktop || !selected || hidden) return null;
+  // tablets and desktops edit in the side panel
+  const hasSidePanel = useMediaQuery(TABLET_UP, true);
+  if (hasSidePanel || !selected || hidden) return null;
   return (
     <Sheet open onOpenChange={(o) => !o && onDone()} title={selected.type === "text" ? "Edit text" : "Edit image"} modal={false} className="max-h-[46dvh]">
       <Inspector />

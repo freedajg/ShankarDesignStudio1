@@ -74,7 +74,7 @@ function Toggle({ pressed, onClick, label, disabled, children }: { pressed: bool
       onClick={onClick}
       className={cn(
         "grid size-10 place-items-center rounded-[var(--radius-sm)] border transition-colors disabled:opacity-35",
-        pressed ? "border-ink bg-ink text-white" : "border-line-strong hover:border-ink",
+        pressed ? "border-ink bg-ink text-on-ink" : "border-line-strong hover:border-ink",
       )}
     >
       {children}
@@ -263,11 +263,11 @@ function TextInspector({ el, textAreaRef }: { el: TextElement; textAreaRef?: Rea
               aria-label={name}
               title={name}
               onClick={() => update(el.id, { fill: hex })}
-              className={cn("size-8 rounded-full border border-black/15", el.fill.toUpperCase() === hex && "ring-2 ring-accent ring-offset-2")}
+              className={cn("size-8 rounded-full border border-swatch-edge", el.fill.toUpperCase() === hex && "ring-2 ring-accent ring-offset-2")}
               style={{ backgroundColor: hex }}
             />
           ))}
-          <label className="relative size-8 cursor-pointer overflow-hidden rounded-full border border-black/15 bg-[conic-gradient(red,yellow,lime,cyan,blue,magenta,red)]" title="Custom colour">
+          <label className="relative size-8 cursor-pointer overflow-hidden rounded-full border border-swatch-edge bg-[conic-gradient(red,yellow,lime,cyan,blue,magenta,red)]" title="Custom colour">
             <span className="sr-only">Custom colour</span>
             <input type="color" value={el.fill} onChange={(e) => update(el.id, { fill: e.target.value.toUpperCase() }, { coalesce: `${el.id}:fill` })} className="absolute inset-0 cursor-pointer opacity-0" />
           </label>
@@ -302,7 +302,7 @@ function ImageInspector({ el }: { el: ImageElement }) {
     <div className="flex flex-col gap-5" data-testid="image-inspector">
       {asset && (
         <div className="flex items-center gap-3">
-          <div className="grid size-14 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-line bg-[conic-gradient(#eee_25%,#fff_0_50%,#eee_0_75%,#fff_0)] bg-[length:10px_10px] p-1">
+          <div className="grid size-14 shrink-0 place-items-center rounded-[var(--radius-sm)] border border-line bg-[conic-gradient(var(--color-checker-a)_25%,var(--color-checker-b)_0_50%,var(--color-checker-a)_0_75%,var(--color-checker-b)_0)] bg-[length:10px_10px] p-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={asset.previewUrl} alt="" className="max-h-full max-w-full object-contain" />
           </div>

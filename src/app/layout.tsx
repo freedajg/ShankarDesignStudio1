@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Toaster } from "sonner";
+import { ThemedToaster } from "@/components/themed-toaster";
 import { siteUrl } from "@/lib/site-url";
+import { themeInitScript } from "@/lib/theme-script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,17 +17,24 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#faf8f5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafaf7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1117" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-IN" className="h-full antialiased">
+    // data-theme is set by the inline script before hydration
+    <html lang="en-IN" className="h-full antialiased" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="flex min-h-full flex-col">
         {children}
-        <Toaster position="top-center" richColors closeButton />
+        <ThemedToaster />
       </body>
     </html>
   );

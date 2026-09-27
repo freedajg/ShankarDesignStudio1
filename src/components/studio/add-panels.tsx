@@ -139,7 +139,7 @@ export function UploadPanel({ onAdded }: { onAdded?: () => void }) {
                 <button
                   type="button"
                   onClick={() => addImage(a) && onAdded?.()}
-                  className="grid aspect-square w-full place-items-center rounded-[var(--radius-sm)] border border-line bg-[conic-gradient(#eee_25%,#fff_0_50%,#eee_0_75%,#fff_0)] bg-[length:12px_12px] p-1 hover:border-accent"
+                  className="grid aspect-square w-full place-items-center rounded-[var(--radius-sm)] border border-line bg-[conic-gradient(var(--color-checker-a)_25%,var(--color-checker-b)_0_50%,var(--color-checker-a)_0_75%,var(--color-checker-b)_0)] bg-[length:12px_12px] p-1 hover:border-accent"
                   aria-label={`Add ${a.originalFilename ?? "uploaded image"} again`}
                   title={a.originalFilename ?? undefined}
                 >

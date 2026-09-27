@@ -28,7 +28,7 @@ export function CartBadge({ initial }: { initial: number }) {
     >
       <ShoppingBag className="size-5" aria-hidden />
       {count > 0 && (
-        <span className="absolute right-1 top-1 grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[0.7rem] font-semibold text-white">{count}</span>
+        <span className="absolute right-1 top-1 grid min-w-5 place-items-center rounded-full bg-accent px-1 text-[0.7rem] font-semibold text-on-accent">{count}</span>
       )}
     </Link>
   );

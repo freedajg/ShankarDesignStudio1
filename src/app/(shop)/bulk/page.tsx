@@ -54,7 +54,7 @@ export default async function BulkPage() {
             return (
               <Card key={p.id} className="flex flex-col overflow-hidden">
                 <div className="flex items-center gap-4 border-b border-line p-4">
-                  <div className="w-20 shrink-0 rounded-[var(--radius-sm)] bg-surface-muted p-1.5">
+                  <div className="w-20 shrink-0 rounded-[var(--radius-sm)] bg-garment-bg p-1.5">
                     <GarmentImage mockup={p.mockups.front} hex={p.colours[2]?.hex ?? p.colours[0].hex} alt="" />
                   </div>
                   <div>

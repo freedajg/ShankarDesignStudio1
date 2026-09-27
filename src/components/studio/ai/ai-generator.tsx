@@ -105,7 +105,7 @@ export function AiGenerator({ ai, open, onOpenChange }: { ai: AiGeneratorApi; op
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/40 data-[state=open]:animate-fade-in" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-scrim data-[state=open]:animate-fade-in" />
         <Dialog.Content
           data-testid="ai-dialog"
           className="fixed inset-0 z-50 flex flex-col bg-surface shadow-float data-[state=open]:animate-sheet-up sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[92dvh] sm:w-[min(46rem,calc(100vw-2rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[var(--radius-lg)] sm:border sm:border-line"
@@ -250,7 +250,7 @@ export function AiGenerator({ ai, open, onOpenChange }: { ai: AiGeneratorApi; op
                           onClick={() => setStyle(style === s ? null : s)}
                           className={cn(
                             "rounded-[var(--radius-sm)] border px-3 py-1.5 text-sm transition-colors",
-                            style === s ? "border-ink bg-ink font-medium text-white" : "border-line-strong hover:border-ink",
+                            style === s ? "border-ink bg-ink font-medium text-on-ink" : "border-line-strong hover:border-ink",
                           )}
                         >
                           {s}
@@ -359,7 +359,7 @@ function DesignContext() {
   const method = product.printMethods.find((m) => m.code === methodCode);
   return (
     <div className="flex items-start gap-3 rounded-[var(--radius-md)] bg-surface-muted p-3 text-sm">
-      <span className="mt-0.5 size-5 shrink-0 rounded-full border border-black/15" style={{ backgroundColor: colour?.hex }} aria-hidden />
+      <span className="mt-0.5 size-5 shrink-0 rounded-full border border-swatch-edge" style={{ backgroundColor: colour?.hex }} aria-hidden />
       <p className="text-ink-muted">
         Made for your <span className="font-medium text-ink">{colour?.name.toLowerCase()} {product.name}</span> · {area.name.toLowerCase()} ({area.widthMm / 10} × {area.heightMm / 10} cm) on the {side}
         {method && (
